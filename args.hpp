@@ -1,0 +1,54 @@
+////////////////////////////////////////////////////////////////////////////////
+// Copyright (c) 2018-2021 Dimitry Ishenko
+// Contact: dimitry (dot) ishenko (at) (gee) mail (dot) com
+//
+// Distributed under the GNU GPL license. See the LICENSE.md file for details.
+
+////////////////////////////////////////////////////////////////////////////////
+#ifndef PGM_ARGS_HPP
+#define PGM_ARGS_HPP
+
+////////////////////////////////////////////////////////////////////////////////
+#include <string>
+#include <vector>
+
+////////////////////////////////////////////////////////////////////////////////
+namespace pgm
+{
+
+////////////////////////////////////////////////////////////////////////////////
+class param
+{
+public:
+    param(std::string name, std::string description);
+
+protected:
+    std::string name_;
+    std::string description_;
+
+    bool required_ = true;
+    bool opt_val_ = false;
+    bool poly_ = false;
+
+    param(std::string description);
+
+    std::vector<std::string> values_;
+};
+
+////////////////////////////////////////////////////////////////////////////////
+class option : public param
+{
+public:
+    option(std::string code_or_name, std::string description);
+    option(std::string code, std::string name_or_param, std::string description);
+    option(std::string code, std::string name, std::string param, std::string description);
+
+protected:
+    std::string code_, name_;
+};
+
+////////////////////////////////////////////////////////////////////////////////
+}
+
+////////////////////////////////////////////////////////////////////////////////
+#endif
