@@ -79,7 +79,7 @@ struct invalid_argument : std::invalid_argument
 struct invalid_definition : invalid_argument
 {
     invalid_definition(const std::string& why, const std::string& arg) :
-        invalid_argument{ "Invalid option or parameter definition: " + why + " " + arg }
+        invalid_argument{ "Invalid definition: " + why + " '" + arg + "'" }
     { }
 };
 
