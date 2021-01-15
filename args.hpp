@@ -45,8 +45,8 @@ struct arg
     bool is_opt_val () const { return opt_val_ ; }
     bool is_multiple() const { return multiple_; }
 
-    auto count() const { return values_.size(); }
     auto const& values() const { return values_; }
+    auto count() const { return values().size(); }
 
     auto const& value() const { return values().at(0); }
     auto const& value(size_t n) const { return values()[n]; }
