@@ -27,42 +27,14 @@ struct arg
     arg(string code_or_full, string full_or_name, string description);
     arg(string code, string full, string name, string description);
 
-    bool has_code() const { return code_.size(); }
-    auto const& code() const { return code_; }
+    string code, full, name;
+    string description;
 
-    bool has_full() const { return full_.size(); }
-    auto const& full() const { return full_; }
+    bool required = false;
+    bool val_opt  = false; // value is optional
+    bool multiple = false;
 
-    bool has_name() const { return name_.size(); }
-    auto const& name() const { return name_; }
-
-    auto const& description() const { return description_; }
-
-    bool is_option() const { return has_code() || has_full(); }
-    bool is_param() const { return !is_option(); }
-
-    bool is_required() const { return required_; }
-    bool is_opt_val () const { return opt_val_ ; }
-    bool is_multiple() const { return multiple_; }
-
-    auto const& values() const { return values_; }
-    auto count() const { return values().size(); }
-
-    auto const& value() const { return values().at(0); }
-    auto const& value(size_t n) const { return values()[n]; }
-    auto const& value_or(const string& def) { return count() ? value() : def; }
-
-    void add_value(string);
-
-private:
-    string code_, full_, name_;
-    string description_;
-
-    bool required_ = false;
-    bool opt_val_  = false;
-    bool multiple_ = false;
-
-    std::vector<string> values_;
+    std::vector<string> values;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -74,8 +46,7 @@ struct args
     void parse(int argc, char* argv[]);
 
 private:
-    std::vector<arg> options_, params_;
-    bool has_multiple_ = false;
+    std::vector<arg> opts, params;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
