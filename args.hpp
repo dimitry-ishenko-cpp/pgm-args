@@ -32,8 +32,8 @@ private:
     std::string description_;
 
     bool required_ = false;
-    bool opt_val_ = false;
-    bool poly_ = false;
+    bool opt_val_  = false;
+    bool multiple_ = false;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

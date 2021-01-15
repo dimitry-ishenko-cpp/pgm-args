@@ -69,33 +69,33 @@ void to_full(std::string s, std::string& full)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void to_name(const std::string& s, std::string& name, bool& poly)
+void to_name(const std::string& s, std::string& name, bool& multiple)
 {
     name = s;
 
     if(ends_with(name, "..."))
     {
-        poly = true;
+        multiple = true;
         remove_end(name, "...");
     }
     if(!is_valid(name)) throw invalid_definition{ "bad parameter name", s };
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void to_name(const std::string& s, std::string& name, bool& poly, bool& opt_val, bool& required)
+void to_name(const std::string& s, std::string& name, bool& multiple, bool& opt_val, bool& required)
 {
     name = s;
 
     for(auto n = 0; n < 3; ++n)
         if(ends_with(name, "..."))
         {
-            if(poly) throw invalid_definition{ "duplicate specifier", s };
-            poly = true;
+            if(multiple) throw invalid_definition{ "duplicate specifier", s };
+            multiple = true;
             remove_end(name, "...");
         }
         else if(ends_with(name, "?"))
         {
-            if(opt_val) throw invalid_definition{ "duplicate specifier", s };
+            if(opt_val ) throw invalid_definition{ "duplicate specifier", s };
             opt_val = true;
             remove_end(name, "?");
         }
@@ -128,7 +128,7 @@ arg::arg(std::string name_code_or_full, std::string description) :
         to_full(std::move(name_code_or_full), full_);
     else
     {
-        to_name(name_code_or_full, name_, poly_);
+        to_name(name_code_or_full, name_, multiple_);
         required_ = true;
     }
 }
@@ -148,7 +148,7 @@ arg::arg(std::string code_or_full, std::string full_or_name, std::string descrip
     if(full_.empty() && is_full(full_or_name))
         to_full(std::move(full_or_name), full_);
 
-    else to_name(full_or_name, name_, poly_, opt_val_, required_);
+    else to_name(full_or_name, name_, multiple_, opt_val_, required_);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -165,7 +165,7 @@ arg::arg(std::string code, std::string full, std::string name, std::string descr
 
     else throw invalid_definition{ "bad option name", full };
 
-    to_name(name, name_, poly_, opt_val_, required_);
+    to_name(name, name_, multiple_, opt_val_, required_);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
