@@ -171,6 +171,29 @@ arg::arg(string code, string full, string name, string description) :
 ////////////////////////////////////////////////////////////////////////////////
 void arg::add_value(string value) { values_.push_back(std::move(value)); }
 
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+namespace
+{
+
+auto find_option(const std::vector<arg>& options, const string& s)
+{
+    return std::find_if(options.begin(), options.end(),
+        [&](const arg& opt) { return opt.code() == s || opt.full() == s; }
+    );
+
+}
+
+auto find_param(const std::vector<arg>& params, const string& s)
+{
+    return std::find_if(params.begin(), params.end(),
+        [&](const arg& param) { return param.name() == s; }
+    );
+}
+
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 args::args(std::initializer_list<arg> il)
 {
@@ -182,7 +205,7 @@ args& args::operator<<(pgm::arg arg)
 {
     if(arg.is_param())
     {
-        if(find_param(arg.name()) != params_.end()) throw invalid_definition{
+        if(find_param(params_, arg.name()) != params_.end()) throw invalid_definition{
             "duplicate parameter name", arg.name()
         };
         if(arg.is_multiple())
@@ -197,12 +220,12 @@ args& args::operator<<(pgm::arg arg)
     else
     {
         if(arg.has_code())
-            if(find_option(arg.code()) != options_.end()) throw invalid_definition{
+            if(find_option(options_, arg.code()) != options_.end()) throw invalid_definition{
                 "duplicate option name", arg.code()
             };
 
         if(arg.has_full())
-            if(find_option(arg.full()) != options_.end()) throw invalid_definition{
+            if(find_option(options_, arg.full()) != options_.end()) throw invalid_definition{
                 "duplicate option name", arg.full()
             };
 
@@ -210,22 +233,6 @@ args& args::operator<<(pgm::arg arg)
     }
 
     return (*this);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-args::iterator args::find_option(const string& cf)
-{
-    return std::find_if(options_.begin(), options_.end(),
-        [&](const arg& opt) { return opt.code() == cf || opt.full() == cf; }
-    );
-}
-
-////////////////////////////////////////////////////////////////////////////////
-args::iterator args::find_param(const string& name)
-{
-    return std::find_if(params_.begin(), params_.end(),
-        [&](const arg& param) { return param.name() == name; }
-    );
 }
 
 ////////////////////////////////////////////////////////////////////////////////

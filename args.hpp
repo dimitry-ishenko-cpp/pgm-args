@@ -69,7 +69,6 @@ private:
 struct args
 {
     explicit args(std::initializer_list<arg> = { });
-
     args& operator<<(arg);
 
     void parse(int argc, char* argv[]);
@@ -77,10 +76,6 @@ struct args
 private:
     std::vector<arg> options_, params_;
     bool has_multiple_ = false;
-
-    using iterator = std::vector<arg>::iterator;
-    iterator find_option(const string&);
-    iterator find_param(const string&);
 };
 
 ////////////////////////////////////////////////////////////////////////////////
