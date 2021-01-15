@@ -169,6 +169,9 @@ arg::arg(std::string code, std::string full, std::string name, std::string descr
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+void arg::add_value(std::string value) { values_.push_back(std::move(value)); }
+
+////////////////////////////////////////////////////////////////////////////////
 args::args(std::initializer_list<arg> il)
 {
     for(auto& arg : il) (*this) << std::move(arg);

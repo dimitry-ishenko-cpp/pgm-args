@@ -43,6 +43,15 @@ struct arg
     bool is_opt_val () const { return opt_val_ ; }
     bool is_multiple() const { return multiple_; }
 
+    auto count() const { return values_.size(); }
+    auto const& values() const { return values_; }
+
+    auto const& value() const { return values().at(0); }
+    auto const& value(std::size_t n) const { return values()[n]; }
+    auto const& value_or(const std::string& def) { return count() ? value() : def; }
+
+    void add_value(std::string);
+
 private:
     std::string code_, full_, name_;
     std::string description_;
@@ -50,6 +59,8 @@ private:
     bool required_ = false;
     bool opt_val_  = false;
     bool multiple_ = false;
+
+    std::vector<std::string> values_;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
