@@ -177,21 +177,7 @@ args::args(std::initializer_list<arg> il)
 ////////////////////////////////////////////////////////////////////////////////
 args& args::operator<<(pgm::arg arg)
 {
-    if(arg.has_code())
-    {
-        if(find_option(arg.code()) != options_.end()) throw invalid_definition{
-            "duplicate option name", arg.code()
-        };
-        options_.push_back(std::move(arg));
-    }
-    else if(arg.has_full())
-    {
-        if(find_option(arg.full()) != options_.end()) throw invalid_definition{
-            "duplicate option name", arg.full()
-        };
-        options_.push_back(std::move(arg));
-    }
-    else
+    if(arg.is_param())
     {
         if(find_param(arg.name()) != params_.end()) throw invalid_definition{
             "duplicate parameter name", arg.name()
@@ -204,6 +190,20 @@ args& args::operator<<(pgm::arg arg)
             has_multiple_ = true;
         }
         params_.push_back(std::move(arg));
+    }
+    else
+    {
+        if(arg.has_code())
+            if(find_option(arg.code()) != options_.end()) throw invalid_definition{
+                "duplicate option name", arg.code()
+            };
+
+        if(arg.has_full())
+            if(find_option(arg.full()) != options_.end()) throw invalid_definition{
+                "duplicate option name", arg.full()
+            };
+
+        options_.push_back(std::move(arg));
     }
 
     return (*this);
