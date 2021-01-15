@@ -9,6 +9,7 @@
 #define PGM_ARGS_HPP
 
 ////////////////////////////////////////////////////////////////////////////////
+#include <initializer_list>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -49,6 +50,24 @@ private:
     bool required_ = false;
     bool opt_val_  = false;
     bool multiple_ = false;
+};
+
+////////////////////////////////////////////////////////////////////////////////
+struct args
+{
+    explicit args(std::initializer_list<arg> = { });
+
+    args& operator<<(arg);
+
+    void parse(int argc, char* argv[]);
+
+private:
+    std::vector<arg> options_, params_;
+    bool has_multiple_ = false;
+
+    using iterator = std::vector<arg>::iterator;
+    iterator find_option(const std::string&);
+    iterator find_param(const std::string&);
 };
 
 ////////////////////////////////////////////////////////////////////////////////

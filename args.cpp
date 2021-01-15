@@ -169,6 +169,63 @@ arg::arg(std::string code, std::string full, std::string name, std::string descr
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+args::args(std::initializer_list<arg> il)
+{
+    for(auto& arg : il) (*this) << std::move(arg);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+args& args::operator<<(pgm::arg arg)
+{
+    if(arg.has_code())
+    {
+        if(find_option(arg.code()) != options_.end()) throw invalid_definition{
+            "duplicate option name", arg.code()
+        };
+        options_.push_back(std::move(arg));
+    }
+    else if(arg.has_full())
+    {
+        if(find_option(arg.full()) != options_.end()) throw invalid_definition{
+            "duplicate option name", arg.full()
+        };
+        options_.push_back(std::move(arg));
+    }
+    else
+    {
+        if(find_param(arg.name()) != params_.end()) throw invalid_definition{
+            "duplicate parameter name", arg.name()
+        };
+        if(arg.is_multiple())
+        {
+            if(has_multiple_) throw invalid_definition{
+                "2nd parameter with with multiple values", arg.name()
+            };
+            has_multiple_ = true;
+        }
+        params_.push_back(std::move(arg));
+    }
+
+    return (*this);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+args::iterator args::find_option(const std::string& cf)
+{
+    return std::find_if(options_.begin(), options_.end(),
+        [&](const arg& opt) { return opt.code() == cf || opt.full() == cf; }
+    );
+}
+
+////////////////////////////////////////////////////////////////////////////////
+args::iterator args::find_param(const std::string& name)
+{
+    return std::find_if(params_.begin(), params_.end(),
+        [&](const arg& param) { return param.name() == name; }
+    );
+}
+
+////////////////////////////////////////////////////////////////////////////////
 }
 
 ////////////////////////////////////////////////////////////////////////////////
