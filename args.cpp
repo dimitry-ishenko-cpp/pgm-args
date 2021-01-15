@@ -19,7 +19,7 @@ namespace
 {
 
 ////////////////////////////////////////////////////////////////////////////////
-bool ends_with(const std::string& s, const std::string& end)
+bool ends_with(const string& s, const string& end)
 {
     if(s.size() >= end.size())
         return s.substr(s.size() - end.size()) == end;
@@ -27,7 +27,7 @@ bool ends_with(const std::string& s, const std::string& end)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void remove_end(std::string& s, const std::string& end)
+void remove_end(string& s, const string& end)
 {
     s.erase(s.size() - end.size());
 }
@@ -35,7 +35,7 @@ void remove_end(std::string& s, const std::string& end)
 ////////////////////////////////////////////////////////////////////////////////
 bool is_valid(char c) { return c == '-' || std::isalnum(c); }
 
-bool is_valid(const std::string& s)
+bool is_valid(const string& s)
 {
     return s.size() && s[0] != '-' && std::all_of(
         s.begin(), s.end(), static_cast<bool (*)(char)>(&is_valid)
@@ -43,33 +43,33 @@ bool is_valid(const std::string& s)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-bool is_code(const std::string& s)
+bool is_code(const string& s)
 {
     return s.size() == 2 && s[0] == '-' && s[1] != '-';
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-bool is_full(const std::string& s)
+bool is_full(const string& s)
 {
     return s.size() > 2 && s[0] == '-' && s[1] == '-' && s[2] != '-';
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void to_code(std::string s, std::string& code)
+void to_code(string s, string& code)
 {
     code = std::move(s);
     if(!is_valid(code.substr(1))) throw invalid_definition{ "bad option name", code };
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void to_full(std::string s, std::string& full)
+void to_full(string s, string& full)
 {
     full = std::move(s);
     if(!is_valid(full.substr(2))) throw invalid_definition{ "bad option name", full };
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void to_name(const std::string& s, std::string& name, bool& multiple)
+void to_name(const string& s, string& name, bool& multiple)
 {
     name = s;
 
@@ -82,7 +82,7 @@ void to_name(const std::string& s, std::string& name, bool& multiple)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void to_name(const std::string& s, std::string& name, bool& multiple, bool& opt_val, bool& required)
+void to_name(const string& s, string& name, bool& multiple, bool& opt_val, bool& required)
 {
     name = s;
 
@@ -118,7 +118,7 @@ void to_name(const std::string& s, std::string& name, bool& multiple, bool& opt_
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-arg::arg(std::string name_code_or_full, std::string description) :
+arg::arg(string name_code_or_full, string description) :
     description_{ std::move(description) }
 {
     if(is_code(name_code_or_full))
@@ -134,7 +134,7 @@ arg::arg(std::string name_code_or_full, std::string description) :
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-arg::arg(std::string code_or_full, std::string full_or_name, std::string description) :
+arg::arg(string code_or_full, string full_or_name, string description) :
     description_{ std::move(description) }
 {
     if(is_code(code_or_full))
@@ -152,7 +152,7 @@ arg::arg(std::string code_or_full, std::string full_or_name, std::string descrip
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-arg::arg(std::string code, std::string full, std::string name, std::string description) :
+arg::arg(string code, string full, string name, string description) :
     description_{ std::move(description) }
 {
     if(is_code(code))
@@ -169,7 +169,7 @@ arg::arg(std::string code, std::string full, std::string name, std::string descr
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void arg::add_value(std::string value) { values_.push_back(std::move(value)); }
+void arg::add_value(string value) { values_.push_back(std::move(value)); }
 
 ////////////////////////////////////////////////////////////////////////////////
 args::args(std::initializer_list<arg> il)
@@ -213,7 +213,7 @@ args& args::operator<<(pgm::arg arg)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-args::iterator args::find_option(const std::string& cf)
+args::iterator args::find_option(const string& cf)
 {
     return std::find_if(options_.begin(), options_.end(),
         [&](const arg& opt) { return opt.code() == cf || opt.full() == cf; }
@@ -221,7 +221,7 @@ args::iterator args::find_option(const std::string& cf)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-args::iterator args::find_param(const std::string& name)
+args::iterator args::find_param(const string& name)
 {
     return std::find_if(params_.begin(), params_.end(),
         [&](const arg& param) { return param.name() == name; }

@@ -18,12 +18,14 @@
 namespace pgm
 {
 
+using std::string;
+
 ////////////////////////////////////////////////////////////////////////////////
 struct arg
 {
-    arg(std::string name_code_or_full, std::string description);
-    arg(std::string code_or_full, std::string full_or_name, std::string description);
-    arg(std::string code, std::string full, std::string name, std::string description);
+    arg(string name_code_or_full, string description);
+    arg(string code_or_full, string full_or_name, string description);
+    arg(string code, string full, string name, string description);
 
     bool has_code() const { return code_.size(); }
     auto const& code() const { return code_; }
@@ -47,20 +49,20 @@ struct arg
     auto const& values() const { return values_; }
 
     auto const& value() const { return values().at(0); }
-    auto const& value(std::size_t n) const { return values()[n]; }
-    auto const& value_or(const std::string& def) { return count() ? value() : def; }
+    auto const& value(size_t n) const { return values()[n]; }
+    auto const& value_or(const string& def) { return count() ? value() : def; }
 
-    void add_value(std::string);
+    void add_value(string);
 
 private:
-    std::string code_, full_, name_;
-    std::string description_;
+    string code_, full_, name_;
+    string description_;
 
     bool required_ = false;
     bool opt_val_  = false;
     bool multiple_ = false;
 
-    std::vector<std::string> values_;
+    std::vector<string> values_;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -77,8 +79,8 @@ private:
     bool has_multiple_ = false;
 
     using iterator = std::vector<arg>::iterator;
-    iterator find_option(const std::string&);
-    iterator find_param(const std::string&);
+    iterator find_option(const string&);
+    iterator find_param(const string&);
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -89,7 +91,7 @@ struct invalid_argument : std::invalid_argument
 
 struct invalid_definition : invalid_argument
 {
-    invalid_definition(const std::string& why, const std::string& arg) :
+    invalid_definition(const string& why, const string& arg) :
         invalid_argument{ "Invalid definition: " + why + " '" + arg + "'" }
     { }
 };
