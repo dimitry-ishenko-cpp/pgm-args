@@ -24,8 +24,23 @@ struct arg
     arg(std::string code_or_full, std::string full_or_name, std::string description);
     arg(std::string code, std::string full, std::string name, std::string description);
 
-    bool is_option() const { return code_.empty() && full_.empty(); }
+    bool has_code() const { return code_.size(); }
+    auto const& code() const { return code_; }
+
+    bool has_full() const { return full_.size(); }
+    auto const& full() const { return full_; }
+
+    bool has_name() const { return name_.size(); }
+    auto const& name() const { return name_; }
+
+    auto const& description() const { return description_; }
+
+    bool is_option() const { return has_code() || has_full(); }
     bool is_param() const { return !is_option(); }
+
+    bool is_required() const { return required_; }
+    bool is_opt_val () const { return opt_val_ ; }
+    bool is_multiple() const { return multiple_; }
 
 private:
     std::string code_, full_, name_;
