@@ -47,7 +47,7 @@ bool is_code(const std::string& s)
     return s.size() == 2 && s[0] == '-' && s[1] != '-';
 }
 
-bool is_name(const std::string& s)
+bool is_full(const std::string& s)
 {
     return s.size() > 2 && s[0] == '-' && s[1] == '-' && s[2] != '-';
 }
@@ -56,99 +56,113 @@ bool is_name(const std::string& s)
 void to_code(std::string s, std::string& code)
 {
     code = std::move(s);
-    if(!is_valid(code)) throw 0; // ***
+    if(!is_valid(code.substr(1))) throw invalid_definition{ "bad option name", code };
 }
 
-void to_name(std::string s, std::string& name)
+void to_full(std::string s, std::string& full)
 {
-    name = std::move(s);
-    if(!is_valid(name)) throw 0; // ***
+    full = std::move(s);
+    if(!is_valid(full.substr(2))) throw invalid_definition{ "bad option name", full };
 }
 
-void to_param(std::string s, std::string& param, bool& poly, bool& opt_val, bool& required)
+void to_param(const std::string& s, std::string& param, bool& poly, bool& opt_val, bool& required)
 {
-    param = std::move(s);
+    param = s;
 
     for(auto n = 0; n < 3; ++n)
         if(ends_with(param, "..."))
         {
-            if(poly) throw 0; // ***
+            if(poly) throw invalid_definition{ "duplicate specifier", s };
             poly = true;
             remove_end(param, "...");
         }
         else if(ends_with(param, "?"))
         {
-            if(opt_val) throw 0; // ***
+            if(opt_val) throw invalid_definition{ "duplicate specifier", s };
             opt_val = true;
             remove_end(param, "?");
         }
         else if(ends_with(param, "!"))
         {
-            if(required) throw 0; // ***
+            if(required) throw invalid_definition{ "duplicate specifier", s };
             required = true;
             remove_end(param, "!");
         }
         else break;
 
-    if(!is_valid(param)) throw 0; // ***
+    if(param.empty())
+    {
+        if(opt_val) throw invalid_definition{ "bad specifier", s };
+    }
+    else if(!is_valid(param)) throw invalid_definition{ "bad parameter name", s };
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-param::param(std::string name, std::string description) :
-    name_{ std::move(name) }, description_{ std::move(description) }
+param::param(const std::string& name, std::string description) :
+    name_{ name }, description_{ std::move(description) }
 {
     if(ends_with(name_, "..."))
     {
         remove_end(name_, "...");
         poly_ = true;
     }
-    if(!is_valid(name)) throw 0; // ***
+    if(!is_valid(name_)) throw invalid_definition{ "bad parameter name", name };
 }
 
+// NB: overload for `option`, hence `required_{ false }`
 param::param(std::string description) :
     description_{ std::move(description) }, required_{ false }
 { }
 
 ////////////////////////////////////////////////////////////////////////////////
-option::option(std::string code_or_name, std::string description) :
+option::option(std::string code_or_full, std::string description) :
     param{ std::move(description) }
 {
-    if(is_code(code_or_name))
-        to_code(code_or_name, code_);
-    else if(is_name(code_or_name))
-        to_name(code_or_name, name_);
-    else throw 0; // ***
+    if(is_code(code_or_full))
+        to_code(std::move(code_or_full), code_);
+
+    else if(is_full(code_or_full))
+        to_full(std::move(code_or_full), full_);
+
+    else throw invalid_definition{ "bad option name", code_or_full };
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-option::option(std::string code, std::string name_or_param, std::string description) :
+option::option(std::string code_or_full, std::string full_or_param, std::string description) :
     param{ std::move(description) }
 {
-    if(is_code(code))
-        to_code(code, code_);
-    else throw 0; // ***
+    if(is_code(code_or_full))
+        to_code(std::move(code_or_full), code_);
 
-    if(is_name(name_or_param))
-        to_name(name_or_param, name_);
-    else to_param(name_or_param, param::name_, poly_, opt_val_, required_);
+    else if(is_full(code_or_full))
+        to_full(std::move(code_or_full), full_);
+
+    else throw invalid_definition{ "bad option name", code_or_full };
+
+    if(full_.empty() && is_full(full_or_param))
+        to_full(std::move(full_or_param), full_);
+
+    else to_param(full_or_param, param::name_, poly_, opt_val_, required_);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-option::option(std::string code, std::string name, std::string param_, std::string description) :
+option::option(std::string code, std::string full, std::string name, std::string description) :
     param{ std::move(description) }
 {
     if(is_code(code))
-        to_code(code, code_);
-    else throw 0; // ***
+        to_code(std::move(code), code_);
 
-    if(is_name(name))
-        to_name(name, name_);
-    else throw 0; // ***
+    else throw invalid_definition{ "bad option name", code };
 
-    to_param(param_, param::name_, poly_, opt_val_, required_);
+    if(is_full(full))
+        to_full(std::move(full), this->full_);
+
+    else throw invalid_definition{ "bad option name", full };
+
+    to_param(name, param::name_, poly_, opt_val_, required_);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

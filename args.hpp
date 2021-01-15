@@ -9,6 +9,8 @@
 #define PGM_ARGS_HPP
 
 ////////////////////////////////////////////////////////////////////////////////
+#include <initializer_list>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -17,10 +19,9 @@ namespace pgm
 {
 
 ////////////////////////////////////////////////////////////////////////////////
-class param
+struct param
 {
-public:
-    param(std::string name, std::string description);
+    param(const std::string& name, std::string description);
 
 protected:
     std::string name_;
@@ -31,20 +32,30 @@ protected:
     bool poly_ = false;
 
     param(std::string description);
-
-    std::vector<std::string> values_;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
-class option : public param
+struct option : param
 {
-public:
-    option(std::string code_or_name, std::string description);
-    option(std::string code, std::string name_or_param, std::string description);
-    option(std::string code, std::string name, std::string param, std::string description);
+    option(std::string code_or_full, std::string description);
+    option(std::string code_or_full, std::string full_or_param, std::string description);
+    option(std::string code, std::string full, std::string name, std::string description);
 
 protected:
-    std::string code_, name_;
+    std::string code_, full_;
+};
+
+////////////////////////////////////////////////////////////////////////////////
+struct invalid_argument : std::invalid_argument
+{
+    using std::invalid_argument::invalid_argument;
+};
+
+struct invalid_definition : invalid_argument
+{
+    invalid_definition(const std::string& why, const std::string& arg) :
+        invalid_argument{ "Invalid option or parameter definition: " + why + " " + arg }
+    { }
 };
 
 ////////////////////////////////////////////////////////////////////////////////
