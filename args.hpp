@@ -9,7 +9,6 @@
 #define PGM_ARGS_HPP
 
 ////////////////////////////////////////////////////////////////////////////////
-#include <initializer_list>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -19,30 +18,22 @@ namespace pgm
 {
 
 ////////////////////////////////////////////////////////////////////////////////
-struct param
+struct arg
 {
-    param(const std::string& name, std::string description);
+    arg(std::string name_code_or_full, std::string description);
+    arg(std::string code_or_full, std::string full_or_name, std::string description);
+    arg(std::string code, std::string full, std::string name, std::string description);
 
-protected:
-    std::string name_;
+    bool is_option() const { return code_.empty() && full_.empty(); }
+    bool is_param() const { return !is_option(); }
+
+private:
+    std::string code_, full_, name_;
     std::string description_;
 
-    bool required_ = true;
+    bool required_ = false;
     bool opt_val_ = false;
     bool poly_ = false;
-
-    param(std::string description);
-};
-
-////////////////////////////////////////////////////////////////////////////////
-struct option : param
-{
-    option(std::string code_or_full, std::string description);
-    option(std::string code_or_full, std::string full_or_param, std::string description);
-    option(std::string code, std::string full, std::string name, std::string description);
-
-protected:
-    std::string code_, full_;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
