@@ -70,10 +70,10 @@ struct invalid_argument : std::invalid_argument
     { }
 };
 
-struct bad_definition : invalid_argument
+struct invalid_definition : invalid_argument
 {
-    bad_definition(const string& msg, const string& arg) :
-        invalid_argument("Bad definition: " + msg, arg)
+    invalid_definition(const string& msg, const string& arg) :
+        invalid_argument("Invalid definition: " + msg, arg)
     { }
 };
 
