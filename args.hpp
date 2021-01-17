@@ -27,12 +27,14 @@ struct arg
     arg(string code_or_full, string full_or_name, string description);
     arg(string code, string full, string name, string description);
 
-    string code, full, name;
+    string code; // short option name
+    string full; // long option name
+    string name; // param name (option or positional)
     string description;
 
-    bool required = false;
+    bool required = false; // required option
     bool val_opt  = false; // value is optional
-    bool multiple = false;
+    bool multiple = false; // can be specified multiple times
 
     std::vector<string> values;
 };
@@ -51,6 +53,7 @@ struct args
 
     auto const& value(const string& arg) const { return values(arg).at(0); }
     auto const& value(const string& arg, size_t n) const { return values(arg)[n]; }
+
     auto const& value_or(const string& arg, const string& other)
     {
         auto const& vv = values(arg);
@@ -58,22 +61,68 @@ struct args
     }
 
 private:
-    std::vector<arg> opts, params;
+    std::vector<arg> options, params;
     const arg& find(const std::string&) const;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
-struct invalid_argument : std::invalid_argument
+struct argument_exception : std::invalid_argument
 {
-    invalid_argument(const std::string& msg, const std::string& arg) :
+    argument_exception(const std::string& msg, const std::string& arg) :
         std::invalid_argument(msg + " '" + arg + "'")
     { }
 };
 
-struct invalid_definition : invalid_argument
+struct invalid_definition : argument_exception
 {
     invalid_definition(const string& msg, const string& arg) :
-        invalid_argument("Invalid definition: " + msg, arg)
+        argument_exception("Invalid definition: " + msg, arg)
+    { }
+};
+
+struct invalid_argument : argument_exception
+{
+    invalid_argument(const string& arg) :
+        argument_exception("Invalid argument", arg)
+    { }
+
+    using argument_exception::argument_exception;
+};
+
+struct missing_argument : argument_exception
+{
+    missing_argument(const string& arg) :
+        argument_exception("Missing argument", arg)
+    { }
+
+    using argument_exception::argument_exception;
+};
+
+struct missing_option : missing_argument
+{
+    missing_option(const string& arg) :
+        missing_argument("Missing required option", arg)
+    { }
+};
+
+struct duplicate_option : invalid_argument
+{
+    duplicate_option(const string& arg) :
+        invalid_argument("Duplicate option", arg)
+    { }
+};
+
+struct missing_value : missing_argument
+{
+    missing_value(const string& arg) :
+        missing_argument("Missing option value", arg)
+    { }
+};
+
+struct extra_value : invalid_argument
+{
+    extra_value(const string& arg) :
+        invalid_argument("Extra option value", arg)
     { }
 };
 
