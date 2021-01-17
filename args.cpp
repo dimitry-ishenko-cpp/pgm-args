@@ -354,7 +354,7 @@ void args::parse(int argc, char* argv[])
     // check required options
     for(auto const& opt : options)
         if(opt.required && opt.values.empty())
-            throw missing_option{ opt.code.size() ? opt.code : opt.full };
+            throw missing_option{ opt.code, opt.full };
 
     // process collected parameters
     for(auto& par : params)

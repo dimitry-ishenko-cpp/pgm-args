@@ -62,67 +62,83 @@ struct args
 
 private:
     std::vector<arg> options, params;
-    const arg& find(const std::string&) const;
+    const arg& find(const string&) const;
 };
+
+////////////////////////////////////////////////////////////////////////////////
+inline auto quoted(const string& arg) { return arg.size() ? "'" + arg + "'" : arg; }
 
 ////////////////////////////////////////////////////////////////////////////////
 struct argument_exception : std::invalid_argument
 {
-    argument_exception(const std::string& msg, const std::string& arg) :
-        std::invalid_argument(msg + " '" + arg + "'")
+    argument_exception(const string& msg, const string& arg) :
+        std::invalid_argument{ msg + " " + quoted(arg) + "." }
+    { }
+
+    argument_exception(const string& msg, const string& arg1, const string& arg2) :
+        std::invalid_argument{ msg + " " + quoted(arg1) +
+            (arg1.size() && arg2.size() ? " or " : "") + quoted(arg2) + "."
+        }
     { }
 };
 
+////////////////////////////////////////////////////////////////////////////////
 struct invalid_definition : argument_exception
 {
     invalid_definition(const string& msg, const string& arg) :
-        argument_exception("Invalid definition: " + msg, arg)
+        argument_exception{ "Invalid definition: " + msg, arg }
     { }
 };
 
+////////////////////////////////////////////////////////////////////////////////
 struct invalid_argument : argument_exception
 {
     invalid_argument(const string& arg) :
-        argument_exception("Invalid argument", arg)
+        argument_exception{ "Invalid argument", arg }
     { }
 
     using argument_exception::argument_exception;
 };
 
+////////////////////////////////////////////////////////////////////////////////
 struct missing_argument : argument_exception
 {
     missing_argument(const string& arg) :
-        argument_exception("Missing argument", arg)
+        argument_exception{ "Missing argument", arg }
     { }
 
     using argument_exception::argument_exception;
 };
 
+////////////////////////////////////////////////////////////////////////////////
 struct missing_option : missing_argument
 {
-    missing_option(const string& arg) :
-        missing_argument("Missing required option", arg)
+    missing_option(const string& arg1, const string& arg2) :
+        missing_argument{ "Missing required option", arg1, arg2 }
     { }
 };
 
+////////////////////////////////////////////////////////////////////////////////
 struct duplicate_option : invalid_argument
 {
     duplicate_option(const string& arg) :
-        invalid_argument("Duplicate option", arg)
+        invalid_argument{ "Duplicate option", arg }
     { }
 };
 
+////////////////////////////////////////////////////////////////////////////////
 struct missing_value : missing_argument
 {
     missing_value(const string& arg) :
-        missing_argument("Missing option value", arg)
+        missing_argument{ "Missing option value", arg }
     { }
 };
 
+////////////////////////////////////////////////////////////////////////////////
 struct extra_value : invalid_argument
 {
     extra_value(const string& arg) :
-        invalid_argument("Extra option value", arg)
+        invalid_argument{ "Extra option value", arg }
     { }
 };
 
