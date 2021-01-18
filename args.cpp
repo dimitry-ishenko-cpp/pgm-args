@@ -10,7 +10,9 @@
 #include <algorithm>
 #include <cctype>
 #include <deque>
+#include <iomanip>
 #include <optional>
+#include <sstream>
 #include <tuple>
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -370,6 +372,88 @@ void args::parse(int argc, char* argv[])
     }
 
     if(todo.size()) throw invalid_argument{ todo.front() };
+}
+
+////////////////////////////////////////////////////////////////////////////////
+string args::usage(const string& program, const string& description)
+{
+    std::ostringstream os;
+    os << std::left;
+
+    os << "Usage: " << program;
+    if(options.size()) os << " [option]...";
+    if(params.size())
+    {
+        for(auto const& par : params)
+            os << (par.val_opt
+                ? " [" + par.name + "]"
+                : " <" + par.name + ">"
+            );
+        if(params.back().multiple) os << "...";
+    }
+    os << std::endl;
+
+    auto have_code = std::any_of(options.begin(), options.end(),
+        [](const arg& opt) { return opt.code.size(); }
+    );
+    std::size_t max_size = 0;
+    std::vector<std::tuple<string, string>> args;
+
+    for(auto const& opt : options)
+    {
+        string name;
+        if(opt.name.size())
+        {
+            if(opt.full.size())
+            {
+                if(opt.val_opt) name = "[=<" + opt.name + ">]";
+                else name = "=<" + opt.name + ">";
+            }
+            else
+            {
+                if(opt.val_opt) name = " [<" + opt.name + ">]";
+                else name = " <" + opt.name + ">";
+            }
+        }
+
+        string arg{ "  " + opt.code };
+        if(opt.code.size())
+        {
+            if(opt.full.size()) arg += ", ";
+        }
+        else if(have_code) arg += "    ";
+        arg += opt.full + name + "  ";
+
+        max_size = std::max(max_size, arg.size());
+        args.emplace_back(std::move(arg), opt.description);
+    }
+
+    for(auto const& par : params)
+    {
+        auto arg{ "  <" + par.name + ">  " };
+        max_size = std::max(max_size, arg.size());
+        args.emplace_back(std::move(arg), par.description);
+    }
+
+    if(args.size())
+    {
+        os << "\nWhere:\n" << std::endl;
+
+        for(auto const& [ arg, desc ] : args)
+        {
+            os << std::setw(max_size) << arg;
+
+            string read;
+            for(std::istringstream is{ desc }; std::getline(is, read); )
+                os << read << "\n" << std::setw(max_size) << "";
+            os << std::endl;
+        }
+    }
+    else os << std::endl;
+
+    if(description.size()) os << description << std::endl;
+
+    return os.str();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

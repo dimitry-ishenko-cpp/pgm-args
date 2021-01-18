@@ -60,6 +60,8 @@ struct args
         return vv.size() ? vv.at(0) : other;
     }
 
+    string usage(const string& program, const string& description = { });
+
 private:
     std::vector<arg> options, params;
     const arg& find(const string&) const;
