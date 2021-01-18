@@ -384,17 +384,13 @@ string args::usage(const string& program, const string& description)
     if(params.size())
     {
         for(auto const& par : params)
-            os << (par.val_opt
-                ? " [" + par.name + "]"
-                : " <" + par.name + ">"
-            );
+            os << (par.val_opt ? " [" + par.name + "]" : " <" + par.name + ">");
         if(params.back().multiple) os << "...";
     }
-    os << std::endl;
 
-    auto have_code = std::any_of(options.begin(), options.end(),
-        [](const arg& opt) { return opt.code.size(); }
-    );
+    auto code_size = [](const arg& opt) { return opt.code.size(); };
+    auto have_code = std::any_of(options.begin(), options.end(), code_size);
+
     std::size_t size = 0;
     std::vector<std::tuple<string, string>> args;
 
@@ -430,21 +426,21 @@ string args::usage(const string& program, const string& description)
 
     if(args.size())
     {
-        os << "\nWhere:\n" << std::endl;
+        os << "\n\nWhere:\n";
 
         for(auto const& [ arg, desc ] : args)
         {
-            os << std::setw(size) << arg;
-
             string read;
+            bool once = true;
             for(std::istringstream is{ desc }; std::getline(is, read); )
-                os << read << "\n" << std::setw(size) << "";
-            os << std::endl;
+            {
+                os << '\n' << std::setw(size) << (once ? arg : "") << read;
+                once = false;
+            }
         }
     }
-    else os << std::endl;
 
-    if(description.size()) os << description << std::endl;
+    if(description.size()) os << "\n\n" << description;
 
     return os.str();
 }
