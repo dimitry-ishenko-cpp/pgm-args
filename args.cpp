@@ -388,9 +388,6 @@ string args::usage(const string& program, const string& description)
         if(params.back().multiple) os << "...";
     }
 
-    auto code_size = [](const arg& opt) { return opt.code.size(); };
-    auto have_code = std::any_of(options.begin(), options.end(), code_size);
-
     std::size_t size = 0;
     std::vector<std::tuple<string, string>> args;
 
@@ -406,40 +403,34 @@ string args::usage(const string& program, const string& description)
         }
 
         string fill;
-        if(opt.full.size())
-        {
-            if(opt.code.size()) fill = ", ";
-            else if(have_code) fill = "    ";
-        }
+        if(opt.full.size()) fill = opt.code.size() ? ", " : "    ";
 
         auto arg{ "  " + opt.code + fill + opt.full + name + "  " };
         size = std::max(size, arg.size());
-        args.emplace_back(std::move(arg), opt.description);
+        args.emplace_back(std::move(arg), opt.description + '\n');
     }
+
+    // add blank line between options and params
+    if(params.size()) args.emplace_back(" ", " ");
 
     for(auto const& par : params)
     {
         auto arg{ "  <" + par.name + ">  " };
         size = std::max(size, arg.size());
-        args.emplace_back(std::move(arg), par.description);
+        args.emplace_back(std::move(arg), par.description + '\n');
     }
 
-    if(args.size())
+    if(args.size()) os << '\n';
+    for(auto const& [ arg, desc ] : args)
     {
-        os << "\n\nWhere:\n";
-
-        for(auto const& [ arg, desc ] : args)
+        string read;
+        bool once = true;
+        for(std::istringstream is{ desc }; std::getline(is, read); )
         {
-            string read;
-            bool once = true;
-            for(std::istringstream is{ desc }; std::getline(is, read); )
-            {
-                os << '\n' << std::setw(size) << (once ? arg : "") << read;
-                once = false;
-            }
+            os << '\n' << std::setw(size) << (once ? arg : "") << read;
+            once = false;
         }
     }
-
     if(description.size()) os << "\n\n" << description;
 
     return os.str();
