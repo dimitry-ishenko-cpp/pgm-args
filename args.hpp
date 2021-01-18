@@ -27,9 +27,9 @@ struct arg
     arg(string code_or_full, string full_or_name, string description);
     arg(string code, string full, string name, string description);
 
-    string code; // short option name
-    string full; // long option name
-    string name; // param name (option or positional)
+    string code;            // short option name
+    string full;            // long option name
+    string name;            // param name (option or positional)
     string description;
 
     bool required = false; // required option
