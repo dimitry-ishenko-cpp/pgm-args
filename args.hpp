@@ -30,7 +30,9 @@ struct arg
 
     auto const& values() const { return values_; }
     auto count() const { return values().size(); }
-    auto empty() const { return count() == 0; }
+
+    bool empty() const { return !count(); }
+    explicit operator bool() const { return count(); }
 
     auto const& value() const { return values().at(0); }
     auto const& value(size_t n) const { return values()[n]; } // NB: no range check
