@@ -236,11 +236,11 @@ auto split_option(const string& arg)
 ////////////////////////////////////////////////////////////////////////////////
 args::args(std::initializer_list<arg> il)
 {
-    for(auto& arg : il) (*this) << std::move(arg);
+    for(auto& arg : il) add(std::move(arg));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-args& args::operator<<(pgm::arg arg)
+void args::add(pgm::arg arg)
 {
     bool new_opt = false;
     if(arg.code.size())
@@ -280,8 +280,6 @@ args& args::operator<<(pgm::arg arg)
         }
         else throw invalid_definition{ "duplicate param name", arg.name };
     }
-
-    return (*this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

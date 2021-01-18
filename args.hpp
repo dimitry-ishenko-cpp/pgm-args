@@ -12,6 +12,7 @@
 #include <initializer_list>
 #include <stdexcept>
 #include <string>
+#include <utility> // std::forward
 #include <vector>
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -43,7 +44,10 @@ struct arg
 struct args
 {
     explicit args(std::initializer_list<arg> = { });
-    args& operator<<(arg);
+
+    void add(arg);
+    template<typename... Args>
+    void add(Args&&... args) { return add(arg{ std::forward<Args>(args)... }); }
 
     void parse(int argc, char* argv[]);
 
