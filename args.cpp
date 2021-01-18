@@ -153,10 +153,12 @@ arg::arg(string code_or_full, string full_or_name, string description_) :
 arg::arg(string code_, string full_, string name_, string description_) :
     description{ std::move(description_) }
 {
-    if(valid_code(code_)) code = std::move(code_);
+    if(valid_code(code_))
+        code = std::move(code_);
     else throw invalid_definition{ "bad option name", code_ };
 
-    if(valid_full(full_)) full = std::move(full_);
+    if(valid_full(full_))
+        full = std::move(full_);
     else throw invalid_definition{ "bad option name", full_ };
 
     // this is option param name and/or option specifier(s)
@@ -320,7 +322,8 @@ void args::parse(int argc, char* argv[])
                     if(val)
                     {
                         // this could be a group of short options (eg, -abc)
-                        if(opt.size() == 2) args.push_front('-' + *val);
+                        if(opt.size() == 2)
+                            args.push_front('-' + *val);
                         else throw extra_value{ arg };
                     }
                 }
@@ -359,14 +362,12 @@ void args::parse(int argc, char* argv[])
     // process collected parameters
     for(auto& par : params)
     {
-        if(todo.empty())
-        {
-            if(par.val_opt) continue;
-            throw missing_argument{ par.name };
-        }
+        if(todo.size())
+            do par.values.push_back(take_front(todo));
+            while(par.multiple && todo.size());
 
-        do par.values.push_back(take_front(todo));
-        while(par.multiple && todo.size());
+        else if(!par.val_opt)
+            throw missing_argument{ par.name };
     }
 
     if(todo.size()) throw invalid_argument{ todo.front() };
@@ -394,42 +395,36 @@ string args::usage(const string& program, const string& description)
     auto have_code = std::any_of(options.begin(), options.end(),
         [](const arg& opt) { return opt.code.size(); }
     );
-    std::size_t max_size = 0;
+    std::size_t size = 0;
     std::vector<std::tuple<string, string>> args;
 
     for(auto const& opt : options)
     {
-        string name;
-        if(opt.name.size())
+        string name{ opt.name };
+        if(name.size())
         {
-            if(opt.full.size())
-            {
-                if(opt.val_opt) name = "[=<" + opt.name + ">]";
-                else name = "=<" + opt.name + ">";
-            }
-            else
-            {
-                if(opt.val_opt) name = " [<" + opt.name + ">]";
-                else name = " <" + opt.name + ">";
-            }
+            name = "<" + name + ">";
+            if(opt.full.size()) name = "=" + name;
+            if(opt.val_opt) name = "[" + name + "]";
+            if(!opt.full.size()) name = " " + name;
         }
 
-        string arg{ "  " + opt.code };
-        if(opt.code.size())
+        string fill;
+        if(opt.full.size())
         {
-            if(opt.full.size()) arg += ", ";
+            if(opt.code.size()) fill = ", ";
+            else if(have_code) fill = "    ";
         }
-        else if(have_code) arg += "    ";
-        arg += opt.full + name + "  ";
 
-        max_size = std::max(max_size, arg.size());
+        auto arg{ "  " + opt.code + fill + opt.full + name + "  " };
+        size = std::max(size, arg.size());
         args.emplace_back(std::move(arg), opt.description);
     }
 
     for(auto const& par : params)
     {
         auto arg{ "  <" + par.name + ">  " };
-        max_size = std::max(max_size, arg.size());
+        size = std::max(size, arg.size());
         args.emplace_back(std::move(arg), par.description);
     }
 
@@ -439,11 +434,11 @@ string args::usage(const string& program, const string& description)
 
         for(auto const& [ arg, desc ] : args)
         {
-            os << std::setw(max_size) << arg;
+            os << std::setw(size) << arg;
 
             string read;
             for(std::istringstream is{ desc }; std::getline(is, read); )
-                os << read << "\n" << std::setw(max_size) << "";
+                os << read << "\n" << std::setw(size) << "";
             os << std::endl;
         }
     }
