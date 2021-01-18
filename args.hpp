@@ -28,16 +28,19 @@ struct arg
     arg(string code_or_full, string full_or_name, string description);
     arg(string code, string full, string name, string description);
 
-    string code;            // short option name
-    string full;            // long option name
-    string name;            // param name (option or positional)
-    string description;
+private:
+    friend struct args;
 
-    bool required = false; // required option
-    bool val_opt  = false; // value is optional
-    bool multiple = false; // can be specified multiple times
+    string code_;            // short option name
+    string full_;            // long option name
+    string name_;            // param name (option or positional)
+    string description_;
 
-    std::vector<string> values;
+    bool required_ = false; // required option
+    bool val_opt_  = false; // value is optional
+    bool multiple_ = false; // can be specified multiple times
+
+    std::vector<string> values_;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -51,7 +54,7 @@ struct args
 
     void parse(int argc, char* argv[]);
 
-    auto const& values(const string& arg) const { return find(arg).values; }
+    auto const& values(const string& arg) const { return find(arg).values_; }
     auto count(const string& arg) const { return values(arg).size(); }
     bool empty(const string& arg) const { return !count(arg); }
 
@@ -68,6 +71,14 @@ struct args
 
 private:
     std::vector<arg> options, params;
+
+    using const_iterator = decltype(options)::const_iterator;
+    using iterator = decltype(options)::iterator;
+
+    const_iterator find_option(const string&) const;
+    iterator find_option(const string&);
+    const_iterator find_param(const string&) const;
+
     const arg& find(const string&) const;
 };
 

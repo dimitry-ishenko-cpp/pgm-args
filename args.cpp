@@ -97,106 +97,168 @@ void strip_specifiers(string& name, bool& multiple, bool& val_opt, bool& require
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-arg::arg(string name_code_or_full, string description_) :
-    description{ std::move(description_) }
+arg::arg(string name_code_or_full, string description) :
+    description_{ std::move(description) }
 {
     if(valid_code(name_code_or_full))
-        code = std::move(name_code_or_full);
+        code_ = std::move(name_code_or_full);
 
     else if(valid_full(name_code_or_full))
-        full = std::move(name_code_or_full);
+        full_ = std::move(name_code_or_full);
 
     else
     {
         // this is a positional param name
-        name = name_code_or_full;
-        strip_specifiers(name, multiple, val_opt, required);
+        name_ = name_code_or_full;
+        strip_specifiers(name_, multiple_, val_opt_, required_);
 
         // required only applies to options
-        if(required) throw invalid_definition{ "bad specifier", name_code_or_full };
-        valid_name(name);
+        if(required_) throw invalid_definition{ "bad specifier", name_code_or_full };
+        valid_name(name_);
     }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-arg::arg(string code_or_full, string full_or_name, string description_) :
-    description{ std::move(description_) }
+arg::arg(string code_or_full, string full_or_name, string description) :
+    description_{ std::move(description) }
 {
     if(valid_code(code_or_full))
-        code = std::move(code_or_full);
+        code_ = std::move(code_or_full);
 
     else if(valid_full(code_or_full))
-        full = std::move(code_or_full);
+        full_ = std::move(code_or_full);
 
     else throw invalid_definition{ "bad option name", code_or_full };
 
-    if(full.empty() && valid_full(full_or_name))
-        full = std::move(full_or_name);
+    if(full_.empty() && valid_full(full_or_name))
+        full_ = std::move(full_or_name);
 
     else
     {
         // this is option param name and/or option specifier(s)
-        name = full_or_name;
-        strip_specifiers(name, multiple, val_opt, required);
+        name_ = full_or_name;
+        strip_specifiers(name_, multiple_, val_opt_, required_);
 
         // option has no param (ie, takes no value)
-        if(name.empty())
+        if(name_.empty())
         {
             // val_opt only applies to option with param
-            if(val_opt) throw invalid_definition{ "bad specifier", full_or_name };
+            if(val_opt_) throw invalid_definition{ "bad specifier", full_or_name };
         }
-        else valid_name(name);
+        else valid_name(name_);
     }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-arg::arg(string code_, string full_, string name_, string description_) :
-    description{ std::move(description_) }
+arg::arg(string code, string full, string name, string description) :
+    description_{ std::move(description) }
 {
-    if(valid_code(code_))
-        code = std::move(code_);
+    if(valid_code(code))
+        code_ = std::move(code);
     else throw invalid_definition{ "bad option name", code_ };
 
-    if(valid_full(full_))
-        full = std::move(full_);
-    else throw invalid_definition{ "bad option name", full_ };
+    if(valid_full(full))
+        full_ = std::move(full);
+    else throw invalid_definition{ "bad option name", full };
 
     // this is option param name and/or option specifier(s)
-    name = name_;
-    strip_specifiers(name, multiple, val_opt, required);
+    name_ = name;
+    strip_specifiers(name_, multiple_, val_opt_, required_);
 
     // option has no param (ie, takes no value)
-    if(name.empty())
+    if(name_.empty())
     {
         // val_opt only applies to option with param
-        if(val_opt) throw invalid_definition{ "bad specifier", name_ };
+        if(val_opt_) throw invalid_definition{ "bad specifier", name };
     }
-    else valid_name(name);
+    else valid_name(name_);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+args::args(std::initializer_list<arg> il)
+{
+    for(auto& arg : il) add(std::move(arg));
+}
+
+////////////////////////////////////////////////////////////////////////////////
+void args::add(pgm::arg arg)
+{
+    bool new_opt = false;
+    if(arg.code_.size())
+    {
+        if(find_option(arg.code_) == options.end())
+            new_opt = true;
+        else throw invalid_definition{ "duplicate option name", arg.code_ };
+    }
+
+    if(arg.full_.size())
+    {
+        if(find_option(arg.full_) == options.end())
+            new_opt = true;
+        else throw invalid_definition{ "duplicate option name", arg.full_ };
+    }
+
+    if(new_opt)
+        options.push_back(std::move(arg));
+
+    else
+    {
+        if(find_param(arg.name_) == params.end())
+        {
+            if(params.size())
+            {
+                if(params.back().multiple_)
+                    throw invalid_definition{
+                        "another param after multi-value param", arg.name_
+                    };
+
+                if(params.back().val_opt_ && !arg.val_opt_)
+                    throw invalid_definition{
+                        "non-optional param after optional one", arg.name_
+                    };
+            }
+            params.push_back(std::move(arg));
+        }
+        else throw invalid_definition{ "duplicate param name", arg.name_ };
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+auto args::find_option(const string& s) const -> const_iterator
+{
+    return std::find_if(options.begin(), options.end(),
+        [&](const arg& opt) { return opt.code_ == s || opt.full_ == s; }
+    );
+}
+
+////////////////////////////////////////////////////////////////////////////////
+auto args::find_option(const string& s) -> iterator
+{
+    return std::find_if(options.begin(), options.end(),
+        [&](const arg& opt) { return opt.code_ == s || opt.full_ == s; }
+    );
+}
+
+////////////////////////////////////////////////////////////////////////////////
+auto args::find_param(const string& s) const -> const_iterator
+{
+    return std::find_if(params.begin(), params.end(),
+        [&](const arg& par) { return par.name_ == s; }
+    );
+}
+
+////////////////////////////////////////////////////////////////////////////////
+const arg& args::find(const string& s) const
+{
+    if(auto it = find_option(s); it != options.end()) return *it;
+    if(auto it = find_param(s); it != params.end()) return *it;
+
+    throw invalid_argument{ s };
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 namespace
 {
-
-auto find_option(const std::vector<arg>& opts, const string& s)
-{
-    auto is_match = [&](const arg& opt) { return opt.code == s || opt.full == s; };
-    return std::find_if(opts.begin(), opts.end(), is_match);
-
-}
-
-auto find_option(std::vector<arg>& opts, const string& s)
-{
-    auto is_match = [&](const arg& opt) { return opt.code == s || opt.full == s; };
-    return std::find_if(opts.begin(), opts.end(), is_match);
-
-}
-
-auto find_param(const std::vector<arg>& pars, const string& s)
-{
-    auto is_match = [&](const arg& par) { return par.name == s; };
-    return std::find_if(pars.begin(), pars.end(), is_match);
-}
 
 auto take_front(std::deque<string>& d)
 {
@@ -236,64 +298,6 @@ auto split_option(const string& arg)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-args::args(std::initializer_list<arg> il)
-{
-    for(auto& arg : il) add(std::move(arg));
-}
-
-////////////////////////////////////////////////////////////////////////////////
-void args::add(pgm::arg arg)
-{
-    bool new_opt = false;
-    if(arg.code.size())
-    {
-        if(find_option(options, arg.code) == options.end())
-            new_opt = true;
-        else throw invalid_definition{ "duplicate option name", arg.code };
-    }
-
-    if(arg.full.size())
-    {
-        if(find_option(options, arg.full) == options.end())
-            new_opt = true;
-        else throw invalid_definition{ "duplicate option name", arg.full };
-    }
-
-    if(new_opt)
-        options.push_back(std::move(arg));
-
-    else
-    {
-        if(find_param(params, arg.name) == params.end())
-        {
-            if(params.size())
-            {
-                if(params.back().multiple)
-                    throw invalid_definition{
-                        "another param after multi-value param", arg.name
-                    };
-
-                if(params.back().val_opt && !arg.val_opt)
-                    throw invalid_definition{
-                        "non-optional param after optional one", arg.name
-                    };
-            }
-            params.push_back(std::move(arg));
-        }
-        else throw invalid_definition{ "duplicate param name", arg.name };
-    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-const arg& args::find(const string& arg) const
-{
-    if(auto it = find_option(options, arg); it != options.end()) return *it;
-    if(auto it = find_param(params, arg); it != params.end()) return *it;
-
-    throw invalid_argument{ arg };
-}
-
-////////////////////////////////////////////////////////////////////////////////
 void args::parse(int argc, char* argv[])
 {
     std::deque<string> args, todo;
@@ -314,10 +318,10 @@ void args::parse(int argc, char* argv[])
         {
             auto [ opt, val ] = split_option(arg);
 
-            if(auto it = find_option(options, opt); it != options.end())
+            if(auto it = find_option(opt); it != options.end())
             {
                 // option takes no value
-                if(it->name.empty())
+                if(it->name_.empty())
                 {
                     if(val)
                     {
@@ -328,7 +332,7 @@ void args::parse(int argc, char* argv[])
                     }
                 }
                 // option takes optional value
-                else if(it->val_opt)
+                else if(it->val_opt_)
                 {
                     if(!val && args.size() && is_param(args.front()))
                         val = take_front(args);
@@ -344,11 +348,11 @@ void args::parse(int argc, char* argv[])
                     }
                 }
 
-                if(it->values.size() && !it->multiple)
+                if(it->values_.size() && !it->multiple_)
                     throw duplicate_option{ arg };
 
                 if(!val) val = string{ };
-                it->values.push_back(std::move(*val));
+                it->values_.push_back(std::move(*val));
             }
             else throw invalid_argument{ arg };
         }
@@ -356,18 +360,18 @@ void args::parse(int argc, char* argv[])
 
     // check required options
     for(auto const& opt : options)
-        if(opt.required && opt.values.empty())
-            throw missing_option{ opt.code, opt.full };
+        if(opt.required_ && opt.values_.empty())
+            throw missing_option{ opt.code_, opt.full_ };
 
     // process collected parameters
     for(auto& par : params)
     {
         if(todo.size())
-            do par.values.push_back(take_front(todo));
-            while(par.multiple && todo.size());
+            do par.values_.push_back(take_front(todo));
+            while(par.multiple_ && todo.size());
 
-        else if(!par.val_opt)
-            throw missing_argument{ par.name };
+        else if(!par.val_opt_)
+            throw missing_argument{ par.name_ };
     }
 
     if(todo.size()) throw invalid_argument{ todo.front() };
@@ -384,8 +388,8 @@ string args::usage(const string& program, const string& description)
     if(params.size())
     {
         for(auto const& par : params)
-            os << (par.val_opt ? " [" + par.name + "]" : " <" + par.name + ">");
-        if(params.back().multiple) os << "...";
+            os << (par.val_opt_ ? " [" + par.name_ + "]" : " <" + par.name_ + ">");
+        if(params.back().multiple_) os << "...";
     }
 
     std::size_t size = 0;
@@ -393,21 +397,21 @@ string args::usage(const string& program, const string& description)
 
     for(auto const& opt : options)
     {
-        string name{ opt.name };
+        string name{ opt.name_ };
         if(name.size())
         {
             name = "<" + name + ">";
-            if(opt.full.size()) name = "=" + name;
-            if(opt.val_opt) name = "[" + name + "]";
-            if(!opt.full.size()) name = " " + name;
+            if(opt.full_.size()) name = "=" + name;
+            if(opt.val_opt_) name = "[" + name + "]";
+            if(!opt.full_.size()) name = " " + name;
         }
 
         string fill;
-        if(opt.full.size()) fill = opt.code.size() ? ", " : "    ";
+        if(opt.full_.size()) fill = opt.code_.size() ? ", " : "    ";
 
-        auto arg{ "  " + opt.code + fill + opt.full + name + "  " };
+        auto arg{ "  " + opt.code_ + fill + opt.full_ + name + "  " };
         size = std::max(size, arg.size());
-        args.emplace_back(std::move(arg), opt.description + '\n');
+        args.emplace_back(std::move(arg), opt.description_ + '\n');
     }
 
     // add blank line between options and params
@@ -415,9 +419,9 @@ string args::usage(const string& program, const string& description)
 
     for(auto const& par : params)
     {
-        auto arg{ "  <" + par.name + ">  " };
+        auto arg{ "  <" + par.name_ + ">  " };
         size = std::max(size, arg.size());
-        args.emplace_back(std::move(arg), par.description + '\n');
+        args.emplace_back(std::move(arg), par.description_ + '\n');
     }
 
     if(args.size()) os << '\n';
