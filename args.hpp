@@ -28,6 +28,15 @@ struct arg
     arg(string code_or_full, string full_or_name, string description);
     arg(string code, string full, string name, string description);
 
+    auto const& values() const { return values_; }
+    auto count() const { return values().size(); }
+    auto empty() const { return count() == 0; }
+
+    auto const& value() const { return values().at(0); }
+    auto const& value(size_t n) const { return values()[n]; } // NB: no range check
+
+    auto const& value_or(const string& def) const { return count() ? value() : def; }
+
 private:
     friend struct args;
 
@@ -52,21 +61,9 @@ struct args
     template<typename... Args>
     void add(Args&&... args) { return add(arg{ std::forward<Args>(args)... }); }
 
+    auto const& operator[](const string& arg) const { return find(arg); }
+
     void parse(int argc, char* argv[]);
-
-    auto const& values(const string& arg) const { return find(arg).values_; }
-    auto count(const string& arg) const { return values(arg).size(); }
-    bool empty(const string& arg) const { return !count(arg); }
-
-    auto const& value(const string& arg) const { return values(arg).at(0); }
-    auto const& value(const string& arg, size_t n) const { return values(arg)[n]; }
-
-    auto const& value_or(const string& arg, const string& other)
-    {
-        auto const& vv = values(arg);
-        return vv.size() ? vv.at(0) : other;
-    }
-
     string usage(const string& program, const string& description = { });
 
 private:
