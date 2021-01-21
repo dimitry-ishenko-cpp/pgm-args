@@ -1,4 +1,4 @@
-# pgm::args: Define and Process Program Arguments in C++
+# pgm::args: Define and Process Program Arguments in C++ (v0.1)
 
 This simple module allows one to easily define, parse and examine program
 options and positional parameters in a C++ program. :notes:
