@@ -1,9 +1,9 @@
-# pgm::args: Define and Process Program Arguments in C++ (v0.1)
+# pgm::args – Define & Process Program Arguments in C++
 
 This simple module allows one to easily define, parse and examine program
 options and positional parameters in a C++ program. :notes:
 
-Here is a ~~concise~~ example that shows capabilities of `pgm::args`:
+Here is a ~~concise~~ example that shows capabilities of **pgm::args**:
 
 ```cpp
 // 0. Include module header.
@@ -19,13 +19,12 @@ try
     // 1&2. Define options and positional parameters.
     pgm::args args
     {
-        { "-a", "--address", "IP", "Specify IP address to bind to.\n"
-                                   "Default: 0.0.0.0 (bind to all)."  },
-        { "-p", "--port", "N",     "Specify port number to listen on.\n"
-                                   "Default: 42."                     },
-        { "-h", "--help",          "Print this help screen and exit." },
-        { "-v", "--version",       "Show version number and exit."    },
-        { "path?+",                "List of files to read data from." },
+        { "-a", "--address", "IP", "Specify IP address to bind to. Default: 0.0.0.0
+                                   "(bind to all)."                                 },
+        { "-p", "--port", "N",     "Specify port number to listen on. Default: 42." },
+        { "-h", "--help",          "Print this help screen and exit."               },
+        { "-v", "--version",       "Show version number and exit."                  },
+        { "path?+",                "List of files to read data from."               },
     };
 
     // 3. Parse command line arguments.
@@ -43,13 +42,13 @@ try
     else
     {
         auto address{ args["--address"].value_or("0.0.0.0") };
-        auto port{ args["--port"].value_or("4242") };
+        auto port{ args["--port"].value_or("42") };
 
-        std::cout << "address=" << address << ":" << port << std::endl;
+        std::cout << "Listening on " << address << ":" << port << std::endl;
 
         for(auto const& path : args["path"].values())
         {
-            std::cout << "path=" << path << std::endl;
+            std::cout << "Reading from " << path << std::endl;
             do_some_useful_stuff();
         }
 
@@ -67,7 +66,7 @@ catch(const std::exception& e)
 
 ## Installation
 
-The recommended installation method is to add it as a sub-module into your
+The recommended installation method is to add **pgm::args** as a sub-module into your
 project. :tada:
 
 ```shell
@@ -78,24 +77,24 @@ $ git submodule add --depth 1 https://github.com/dimitry-ishenko-cpp/pgm-args.gi
 
 ### :one: Options
 
-Options can be constructed with **short name**, **long name**,
-**parameter name** (if the option accepts values) and **description**.
+Options can be constructed with _short_ name, _long_ name,
+_parameter_ name (if the option accepts values) and _description_.
 
-- [ ] :herb: Short name consists of a single dash (-) followed by one
+- [ ] :herb: Short name consists of a single dash (`-`) followed by one
   alpha-numeric character.
 
-- [ ] :herb: Long name consists of two dashes (--) followed by one or more
+- [ ] :herb: Long name consists of two dashes (`--`) followed by one or more
   alpha-numeric characters and dashes.
 
 - [ ] :herb: Parameter name can contain any
   [graphic](https://en.cppreference.com/w/cpp/string/byte/isgraph) characters.
 
-- [ ] :herb: Either the short or the long name (but not both) can be omitted.
+- [ ] :herb: Either the _short_ or the _long_ name (but not both) can be omitted.
 
-- [ ] :herb: If the parameter name is omitted, it means the option doesn't
+- [ ] :herb: If the _parameter_ name is omitted, it means the option doesn't
   accept values.
 
-- [ ] :herb: The description is mandatory.
+- [ ] :herb: The _description_ is mandatory.
 
 ```cpp
 pgm::args args
@@ -119,13 +118,11 @@ Parameter name can have one or more specifiers after it:
 ```cpp
 pgm::args
 {
-    { "-d", "--debug", "level?",    "Level of debug info to show.\n"
-                                    "Default: 1." },
+    { "-d", "--debug", "level?",    "Level of debug info to show. Default: 1." },
 
     {       "--log-file", "path!",  "Mandatory path to a log file." },
 
-    { "-v", "+",                    "Increase verbosity.\n"
-                                    "Can be specified multiple times." },
+    { "-v", "+",                    "Increase verbosity. (Can be specified multiple times.)" },
 
     { "-o", "--option", "value?!+", "Specifiers can be combined." },
 };
@@ -141,7 +138,7 @@ Several specifiers can also be combined even if it makes little or no sense.
 
 ### :two: Positional Parameters
 
-Positional parameters are constructed with **name** and **description**, both of
+Positional parameters are constructed with _name_ and _description_, both of
 which are mandatory.
 
 - [ ] :herb: Positional arameter name can contain any
@@ -171,8 +168,8 @@ pgm::args args
 - [ ] :herb: The `+` specifier may only be used with the last positional
   parameter.
 
-Specifying duplicate or invalid **option** or **positional parameter** will
-result in :poop: `invalid_definition` exception being thrown by the `pgm::args`
+Specifying duplicate or invalid option or positional parameter will
+result in :poop: `pgm::invalid_definition` exception being thrown by the `pgm::args`
 constructor or the `add()` function.
 
 ---
@@ -184,21 +181,21 @@ function to parse the command line arguments.
 
 The `parse()` function can throw one of the several following exceptions:
 
-- [ ] :poop: `invalid_argument` if invalid option or parameter was specified;
+- [ ] :poop: `pgm::invalid_argument` if invalid option or parameter was specified;
 
-- [ ] :poop: `duplicate_option` if an option (not marked with `+`) was specified
+- [ ] :poop: `pgm::duplicate_option` if an option (not marked with `+`) was specified
   multiple times;
 
-- [ ] :poop: `missing_option` if an option was marked as required (with `!`),
+- [ ] :poop: `pgm::missing_option` if an option was marked as required (with `!`),
   but wasn't specified;
 
-- [ ] :poop: `extra_value` if an option value was specified, but the option
+- [ ] :poop: `pgm::extra_value` if an option value was specified, but the option
   doesn't accept values;
 
-- [ ] :poop: `missing_value` if an option requires a value, but none were
+- [ ] :poop: `pgm::missing_value` if an option requires a value, but none were
   specified;
 
-- [ ] :poop: `missing_argument` if a non-optional positional parameter was not
+- [ ] :poop: `pgm::missing_argument` if a non-optional positional parameter was not
   specified on the command line.
 
 ---
@@ -210,27 +207,45 @@ parsed options and parameters. Options are referred to by either the short or
 the long name, while positional parameters are referred to by their name.
 
 The subscript `operator[]` returns const reference to an instance of `pgm::arg`
-or throws :poop: `invalid_argument` exception.
+or throws :poop: `pgm::invalid_argument` exception.
 
-Using the `pgm::arg` instance you can examine the option or positional
+Using the `pgm::arg` instance you can examine an option or positional
 parameter:
 
-- [ ] :rose: `count()` returns how many times an option/param was encountered
+- [ ] :rose: `count()` returns how many times the option/param was encountered
   during parsing;
 
   ```cpp
   auto level = args["-v"].count();
   ```
 
-- [ ] :rose: `operator bool()` returns `true` if an option/param was found least
+- [ ] :rose: `operator bool()` returns `true` if the option/param was found least
   once;
 
   ```cpp
   if(args["--help"]) show_usage_and_exit();
   if(args["--version"]) show_version_and_exit();
   ```
+  
+  If your program includes one or more mandatory options or positional parameters,
+  but there are certain options (eg, `--help` and `--version`) that should be
+  handled even when those are missing, you can do the following:
+  
+  ```cpp
+  std::exception_ptr ep;
+  try { args.parse(argc, argv); }
+  catch(...) { ep = std::current_exception(); }
 
-- [ ] :rose: `empty()` is the opposite of `operator bool()` -- returns `true`
+  if(args["--help"]) show_usage();
+  else if(args["--version"]) show_version();
+  else if(ep) std::rethrow_exception(ep);
+  else
+  {
+      // process remaining options/parameters
+  }
+  ```
+
+- [ ] :rose: `empty()` is the opposite of `operator bool()` – it returns `true`
   when the option/param was *not* found during parsing;
 
   ```cpp
@@ -245,7 +260,7 @@ parameter:
   ```
 
 - [ ] :rose: `value_or(default_value)` returns option/param value or
-  `default_value` if the option/param was not found during paring;
+  `default_value`, if the option/param was not found during paring;
 
   ```cpp
   auto address{ args["--address"].value_or("192.168.1.1") };
@@ -269,7 +284,7 @@ parameter:
 ### :five: Usage
 
 Finally, the `pgm::args` class provides the `usage()` function, which can be
-used to display all options and positional parameters. :notes:
+used to display all options and positional parameters nicely formatted. :notes:
 
 ```cpp
 if(args["--help"])
