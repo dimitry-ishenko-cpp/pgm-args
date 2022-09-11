@@ -19,14 +19,12 @@
 namespace pgm
 {
 
-using std::string;
-
 ////////////////////////////////////////////////////////////////////////////////
 struct arg
 {
-    arg(string name_code_or_full, string description);
-    arg(string code_or_full, string full_or_name, string description);
-    arg(string code, string full, string name, string description);
+    arg(std::string name_code_or_full, std::string description);
+    arg(std::string code_or_full, std::string full_or_name, std::string description);
+    arg(std::string code, std::string full, std::string name, std::string description);
 
     auto const& values() const { return values_; }
     auto count() const { return values().size(); }
@@ -37,21 +35,21 @@ struct arg
     auto const& value() const { return values().at(0); }
     auto const& value(size_t n) const { return values()[n]; } // NB: no range check
 
-    auto const& value_or(const string& def) const { return count() ? value() : def; }
+    auto const& value_or(const std::string& def) const { return count() ? value() : def; }
 
 private:
     friend struct args;
 
-    string code_;            // short option name
-    string full_;            // long option name
-    string name_;            // param name (option or positional)
-    string description_;
+    std::string code_;      // short option name
+    std::string full_;      // long option name
+    std::string name_;      // param name (option or positional)
+    std::string description_;
 
     bool required_ = false; // required option
     bool val_opt_  = false; // value is optional
     bool multiple_ = false; // can be specified multiple times
 
-    std::vector<string> values_;
+    std::vector<std::string> values_;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -63,35 +61,35 @@ struct args
     template<typename... Args>
     void add(Args&&... args) { return add(arg{ std::forward<Args>(args)... }); }
 
-    auto const& operator[](const string& arg) const { return find(arg); }
+    auto const& operator[](const std::string& arg) const { return find(arg); }
 
     void parse(int argc, char* argv[]);
-    string usage(const string& program, const string& description = { });
+    std::string usage(const std::string& program, const std::string& description = { });
 
 private:
     std::vector<arg> options, params;
 
-    using const_iterator = decltype(options)::const_iterator;
-    using iterator = decltype(options)::iterator;
+    using const_iterator = decltype (options)::const_iterator;
+    using iterator = decltype (options)::iterator;
 
-    const_iterator find_option(const string&) const;
-    iterator find_option(const string&);
-    const_iterator find_param(const string&) const;
+    const_iterator find_option(const std::string&) const;
+    iterator find_option(const std::string&);
+    const_iterator find_param(const std::string&) const;
 
-    const arg& find(const string&) const;
+    const arg& find(const std::string&) const;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
-inline auto quoted(const string& arg) { return arg.size() ? "'" + arg + "'" : arg; }
+inline auto quoted(const std::string& arg) { return arg.size() ? "'" + arg + "'" : arg; }
 
 ////////////////////////////////////////////////////////////////////////////////
 struct argument_exception : std::invalid_argument
 {
-    argument_exception(const string& msg, const string& arg) :
+    argument_exception(const std::string& msg, const std::string& arg) :
         std::invalid_argument{ msg + " " + quoted(arg) + "." }
     { }
 
-    argument_exception(const string& msg, const string& arg1, const string& arg2) :
+    argument_exception(const std::string& msg, const std::string& arg1, const std::string& arg2) :
         std::invalid_argument{ msg + " " + quoted(arg1) +
             (arg1.size() && arg2.size() ? " or " : "") + quoted(arg2) + "."
         }
@@ -101,7 +99,7 @@ struct argument_exception : std::invalid_argument
 ////////////////////////////////////////////////////////////////////////////////
 struct invalid_definition : argument_exception
 {
-    invalid_definition(const string& msg, const string& arg) :
+    invalid_definition(const std::string& msg, const std::string& arg) :
         argument_exception{ "Invalid definition: " + msg, arg }
     { }
 };
@@ -109,7 +107,7 @@ struct invalid_definition : argument_exception
 ////////////////////////////////////////////////////////////////////////////////
 struct invalid_argument : argument_exception
 {
-    invalid_argument(const string& arg) :
+    invalid_argument(const std::string& arg) :
         argument_exception{ "Invalid argument", arg }
     { }
 
@@ -119,7 +117,7 @@ struct invalid_argument : argument_exception
 ////////////////////////////////////////////////////////////////////////////////
 struct missing_argument : argument_exception
 {
-    missing_argument(const string& arg) :
+    missing_argument(const std::string& arg) :
         argument_exception{ "Missing argument", arg }
     { }
 
@@ -129,7 +127,7 @@ struct missing_argument : argument_exception
 ////////////////////////////////////////////////////////////////////////////////
 struct missing_option : missing_argument
 {
-    missing_option(const string& arg1, const string& arg2) :
+    missing_option(const std::string& arg1, const std::string& arg2) :
         missing_argument{ "Missing required option", arg1, arg2 }
     { }
 };
@@ -137,7 +135,7 @@ struct missing_option : missing_argument
 ////////////////////////////////////////////////////////////////////////////////
 struct duplicate_option : invalid_argument
 {
-    duplicate_option(const string& arg) :
+    duplicate_option(const std::string& arg) :
         invalid_argument{ "Duplicate option", arg }
     { }
 };
@@ -145,7 +143,7 @@ struct duplicate_option : invalid_argument
 ////////////////////////////////////////////////////////////////////////////////
 struct missing_value : missing_argument
 {
-    missing_value(const string& arg) :
+    missing_value(const std::string& arg) :
         missing_argument{ "Missing option value", arg }
     { }
 };
@@ -153,7 +151,7 @@ struct missing_value : missing_argument
 ////////////////////////////////////////////////////////////////////////////////
 struct extra_value : invalid_argument
 {
-    extra_value(const string& arg) :
+    extra_value(const std::string& arg) :
         invalid_argument{ "Extra option value", arg }
     { }
 };

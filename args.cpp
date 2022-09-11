@@ -24,7 +24,7 @@ namespace
 {
 
 ////////////////////////////////////////////////////////////////////////////////
-bool valid_code(const string& s)
+bool valid_code(const std::string& s)
 {
     if(s.size() == 2 && s[0] == '-' && s[1] != '-')
     {
@@ -35,7 +35,7 @@ bool valid_code(const string& s)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-bool valid_full(const string& s)
+bool valid_full(const std::string& s)
 {
     if(s.size() > 2 && s[0] == '-' && s[1] == '-' && s[2] != '-')
     {
@@ -49,7 +49,7 @@ bool valid_full(const string& s)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-bool valid_name(const string& s)
+bool valid_name(const std::string& s)
 {
     auto is_valid = [](char c)
     {
@@ -62,7 +62,7 @@ bool valid_name(const string& s)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void strip_specifiers(string& name, bool& multiple, bool& val_opt, bool& required)
+void strip_specifiers(std::string& name, bool& multiple, bool& val_opt, bool& required)
 {
     for(auto n = 0; n < 3; ++n)
     {
@@ -97,7 +97,7 @@ void strip_specifiers(string& name, bool& multiple, bool& val_opt, bool& require
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-arg::arg(string name_code_or_full, string description) :
+arg::arg(std::string name_code_or_full, std::string description) :
     description_{ std::move(description) }
 {
     if(valid_code(name_code_or_full))
@@ -119,7 +119,7 @@ arg::arg(string name_code_or_full, string description) :
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-arg::arg(string code_or_full, string full_or_name, string description) :
+arg::arg(std::string code_or_full, std::string full_or_name, std::string description) :
     description_{ std::move(description) }
 {
     if(valid_code(code_or_full))
@@ -150,7 +150,7 @@ arg::arg(string code_or_full, string full_or_name, string description) :
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-arg::arg(string code, string full, string name, string description) :
+arg::arg(std::string code, std::string full, std::string name, std::string description) :
     description_{ std::move(description) }
 {
     if(valid_code(code))
@@ -224,7 +224,7 @@ void args::add(pgm::arg arg)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-auto args::find_option(const string& s) const -> const_iterator
+auto args::find_option(const std::string& s) const -> const_iterator
 {
     return std::find_if(options.begin(), options.end(),
         [&](const arg& opt) { return opt.code_ == s || opt.full_ == s; }
@@ -232,7 +232,7 @@ auto args::find_option(const string& s) const -> const_iterator
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-auto args::find_option(const string& s) -> iterator
+auto args::find_option(const std::string& s) -> iterator
 {
     return std::find_if(options.begin(), options.end(),
         [&](const arg& opt) { return opt.code_ == s || opt.full_ == s; }
@@ -240,7 +240,7 @@ auto args::find_option(const string& s) -> iterator
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-auto args::find_param(const string& s) const -> const_iterator
+auto args::find_param(const std::string& s) const -> const_iterator
 {
     return std::find_if(params.begin(), params.end(),
         [&](const arg& par) { return par.name_ == s; }
@@ -248,7 +248,7 @@ auto args::find_param(const string& s) const -> const_iterator
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-const arg& args::find(const string& s) const
+const arg& args::find(const std::string& s) const
 {
     if(auto it = find_option(s); it != options.end()) return *it;
     if(auto it = find_param(s); it != params.end()) return *it;
@@ -260,26 +260,26 @@ const arg& args::find(const string& s) const
 namespace
 {
 
-auto take_front(std::deque<string>& d)
+auto take_front(std::deque<std::string>& d)
 {
     auto e{ std::move(d.front()) };
     d.pop_front();
     return e;
 }
 
-bool is_param(const string& s)
+bool is_param(const std::string& s)
 {
     return s.empty() || s == "-" || s[0] != '-';
 }
 
-auto split_option(const string& arg)
+auto split_option(const std::string& arg)
 {
-    string opt;
-    std::optional<string> val;
+    std::string opt;
+    std::optional<std::string> val;
 
     if(arg[1] == '-') // long option (full)
     {
-        if(auto p = arg.find('=', 2); p != string::npos)
+        if(auto p = arg.find('=', 2); p != std::string::npos)
         {
             opt = arg.substr(0, p);
             val = arg.substr(p + 1);
@@ -300,7 +300,7 @@ auto split_option(const string& arg)
 ////////////////////////////////////////////////////////////////////////////////
 void args::parse(int argc, char* argv[])
 {
-    std::deque<string> args, todo;
+    std::deque<std::string> args, todo;
     for(int n = 1; n < argc; ++n) args.emplace_back(argv[n]);
 
     bool had_token = false;
@@ -351,7 +351,7 @@ void args::parse(int argc, char* argv[])
                 if(it->values_.size() && !it->multiple_)
                     throw duplicate_option{ arg };
 
-                if(!val) val = string{ };
+                if(!val) val = std::string{ };
                 it->values_.push_back(std::move(*val));
             }
             else throw invalid_argument{ arg };
@@ -378,7 +378,7 @@ void args::parse(int argc, char* argv[])
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-string args::usage(const string& program, const string& description)
+std::string args::usage(const std::string& program, const std::string& description)
 {
     std::ostringstream os;
     os << std::left;
@@ -393,11 +393,11 @@ string args::usage(const string& program, const string& description)
     }
 
     std::size_t size = 0;
-    std::vector<std::tuple<string, string>> args;
+    std::vector<std::tuple<std::string, std::string>> args;
 
     for(auto const& opt : options)
     {
-        string name{ opt.name_ };
+        std::string name{ opt.name_ };
         if(name.size())
         {
             name = "<" + name + ">";
@@ -406,7 +406,7 @@ string args::usage(const string& program, const string& description)
             if(!opt.full_.size()) name = " " + name;
         }
 
-        string fill;
+        std::string fill;
         if(opt.full_.size()) fill = opt.code_.size() ? ", " : "    ";
 
         auto arg{ "  " + opt.code_ + fill + opt.full_ + name + "  " };
@@ -427,7 +427,7 @@ string args::usage(const string& program, const string& description)
     if(args.size()) os << '\n';
     for(auto const& [ arg, desc ] : args)
     {
-        string read;
+        std::string read;
         bool once = true;
         for(std::istringstream is{ desc }; std::getline(is, read); )
         {
