@@ -378,7 +378,7 @@ void args::parse(int argc, char* argv[])
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-std::string args::usage(const std::string& program, const std::string& description)
+std::string args::usage(const std::string& program, const std::string& description) const
 {
     std::ostringstream os;
     os << std::left;

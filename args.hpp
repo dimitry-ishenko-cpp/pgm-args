@@ -64,7 +64,7 @@ struct args
     auto const& operator[](const std::string& arg) const { return find(arg); }
 
     void parse(int argc, char* argv[]);
-    std::string usage(const std::string& program, const std::string& description = { });
+    std::string usage(const std::string& program, const std::string& description = { }) const;
 
 private:
     std::vector<arg> options, params;
