@@ -162,46 +162,53 @@ inline arg::arg(string name1, string name2, string name3, spec spc, string descr
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-inline void args::add(pgm::arg arg)
+inline void args::add(arg new_)
 {
-    if(arg.is_option())
-    {
-        auto new_ = move(arg).to_option();
+    if(new_.is_option())
+        add_option(move(new_.to_option()));
 
-        if(new_.short_.size())
-        {
-            if(has_equal(options_, &option::short_, new_.short_))
-                throw invalid_definition{"duplicate short option '"+new_.short_+"'"};
-        }
-        if(new_.long_.size())
-        {
-            if(has_equal(options_, &option::long_, new_.long_))
-                throw invalid_definition{"duplicate long option '"+new_.long_+"'"};
-        }
+    else if(new_.is_param())
+        add_param(move(new_.to_param()));
 
-        options_.push_back(move(new_));
-    }
-    else if(arg.is_param())
-    {
-        auto new_ = move(arg).to_param();
-
-        if(has_equal(params_, &param::name_, new_.name_))
-            throw invalid_definition{"duplicate param '"+new_.name_+"'"};
-
-        if(params_.size())
-        {
-            if(params_.back().mul_) throw invalid_definition{
-                "'"+new_.name_+"' after multi-value param"
-            };
-
-            if(params_.back().opt_ && !new_.opt_) throw invalid_definition{
-                "non-optional '"+new_.name_+"' after optional param"
-            };
-        }
-
-        params_.push_back(move(new_));
-    }
     else throw invalid_definition{"neither option nor param"};
+}
+
+////////////////////////////////////////////////////////////////////////////////
+inline void args::add_option(option new_)
+{
+    if(new_.short_.size())
+    {
+        if(has_equal(options_, &option::short_, new_.short_))
+            throw invalid_definition{"duplicate short option '"+new_.short_+"'"};
+    }
+
+    if(new_.long_.size())
+    {
+        if(has_equal(options_, &option::long_, new_.long_))
+            throw invalid_definition{"duplicate long option '"+new_.long_+"'"};
+    }
+
+    options_.push_back(move(new_));
+}
+
+////////////////////////////////////////////////////////////////////////////////
+inline void args::add_param(param new_)
+{
+    if(has_equal(params_, &param::name_, new_.name_))
+        throw invalid_definition{"duplicate param '"+new_.name_+"'"};
+
+    if(params_.size())
+    {
+        if(params_.back().mul_) throw invalid_definition{
+            "'"+new_.name_+"' after multi-value param"
+        };
+
+        if(params_.back().opt_ && !new_.opt_) throw invalid_definition{
+            "non-optional '"+new_.name_+"' after optional param"
+        };
+    }
+
+    params_.push_back(move(new_));
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -115,8 +115,8 @@ struct arg
     auto is_option() const { return std::holds_alternative<option>(val_); }
     auto is_param() const { return std::holds_alternative<param>(val_); }
 
-    auto&& to_option() && { return std::get<option>(val_); }
-    auto&& to_param() && { return std::get<param>(val_); }
+    auto& to_option() { return std::get<option>(val_); }
+    auto& to_param() { return std::get<param>(val_); }
 
 private:
     std::variant<option, param> val_;
@@ -145,6 +145,9 @@ struct args
 private:
     std::vector<option> options_;
     std::vector<param> params_;
+
+    void add_option(option);
+    void add_param(param);
 };
 
 ////////////////////////////////////////////////////////////////////////////////
