@@ -350,7 +350,7 @@ inline void args::parse(int argc, char* argv[])
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-inline string args::usage(string_view program, string_view description) const
+inline string args::usage(string_view program, string_view preamble, string_view prologue, string_view epilogue) const
 {
     string short_fill;
     if(std::any_of(options_.begin(), options_.end(),
@@ -359,6 +359,13 @@ inline string args::usage(string_view program, string_view description) const
 
     size_t cell_0_max = 0;
     std::vector<std::tuple<string, string>> rows;
+
+    ////////////////////
+    if(preamble.size())
+    {
+        rows.emplace_back(preamble, "");
+        rows.emplace_back("", "");
+    }
 
     ////////////////////
     string cell_0 = "Usage: " + string{program};
@@ -376,13 +383,19 @@ inline string args::usage(string_view program, string_view description) const
     rows.emplace_back(std::move(cell_0), "");
 
     ////////////////////
+    if(prologue.size())
+    {
+        rows.emplace_back("", "");
+        rows.emplace_back(prologue, "");
+    }
+
+    ////////////////////
     if(options_.size())
     {
-        rows.push_back({ }); // add empty row before options
+        rows.emplace_back("", "");
         for(auto const& el : options_)
         {
-            string cell_0, cell_1;
-
+            string cell_0;
             if(el.short_.size())
             {
                 cell_0 += el.short_; // "-o"
@@ -408,11 +421,10 @@ inline string args::usage(string_view program, string_view description) const
             cell_0_max = std::max(cell_0_max, cell_0.size());
 
             std::istringstream iss{el.description_ + "\n"};
+            string cell_1;
             std::getline(iss, cell_1);
 
-            // add option and 1st line of description
             rows.emplace_back(std::move(cell_0), std::move(cell_1));
-            // add remaining description lines (if any)
             while(std::getline(iss, cell_1)) rows.emplace_back("", std::move(cell_1));
         }
     }
@@ -420,7 +432,7 @@ inline string args::usage(string_view program, string_view description) const
     ////////////////////
     if(params_.size())
     {
-        rows.push_back({ }); // add empty row before params
+        rows.emplace_back("", "");
         for(auto const& el : params_)
         {
             cell_0_max = std::max(cell_0_max, el.name_.size());
@@ -429,18 +441,16 @@ inline string args::usage(string_view program, string_view description) const
             string cell_1;
             std::getline(iss, cell_1);
 
-            // add param and 1st line of description
             rows.emplace_back(el.name_, std::move(cell_1));
-            // add remaining description lines (if any)
             while(std::getline(iss, cell_1)) rows.emplace_back("", std::move(cell_1));
         }
     }
 
     ////////////////////
-    if(description.size())
+    if(epilogue.size())
     {
-        rows.push_back({ });
-        rows.emplace_back(description, "");
+        rows.emplace_back("", "");
+        rows.emplace_back(epilogue, "");
     }
 
     ////////////////////
@@ -454,10 +464,10 @@ inline string args::usage(string_view program, string_view description) const
         oss << "\n";
     }
 
-    auto text = oss.str();
-    text.pop_back(); // remove trailing '\n
+    auto overall = oss.str();
+    overall.pop_back(); // remove trailing '\n'
 
-    return text;
+    return overall;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

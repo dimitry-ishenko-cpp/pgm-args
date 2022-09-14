@@ -140,7 +140,7 @@ struct args
     argval const& operator[](string_view) const;
 
     void parse(int argc, char* argv[]);
-    string usage(string_view program, string_view description = { }) const;
+    string usage(string_view program, string_view preamble = { }, string_view prologue = { }, string_view epilogue = { }) const;
 
 private:
     std::vector<option> options_;
