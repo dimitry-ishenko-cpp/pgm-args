@@ -98,19 +98,19 @@ struct param
 // program argument (either option or param)
 struct arg
 {
-    arg(string name1, string description) : // (1)
+    arg(string name1, string description) :
         arg{move(name1), spec{ }, move(description)}
     { }
-    arg(string name1, string name2, string description) : // (2)
+    arg(string name1, string name2, string description) :
         arg{move(name1), move(name2), spec{ }, move(description)}
     { }
-    arg(string name1, string name2, string name3, string description) : // (3)
+    arg(string name1, string name2, string name3, string description) :
         arg{move(name1), move(name2), move(name3), spec{ }, move(description)}
     { }
 
-    arg(string name1, spec, string description); // (1)
-    arg(string name1, string name2, spec, string description); // (2)
-    arg(string name1, string name2, string name3, spec, string description); // (3)
+    arg(string name1, spec, string description);
+    arg(string name1, string name2, spec, string description);
+    arg(string name1, string name2, string name3, spec, string description);
 
     auto is_option() const { return std::holds_alternative<option>(val_); }
     auto is_param() const { return std::holds_alternative<param>(val_); }
