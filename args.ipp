@@ -12,8 +12,10 @@
 #include <algorithm>
 #include <cctype> // std::isalnum, std::isgraph
 #include <deque>
+#include <iomanip>
 #include <optional>
 #include <sstream>
+#include <tuple>
 
 ////////////////////////////////////////////////////////////////////////////////
 namespace pgm
@@ -350,9 +352,112 @@ inline void args::parse(int argc, char* argv[])
 ////////////////////////////////////////////////////////////////////////////////
 inline string args::usage(string_view program, string_view description) const
 {
-    std::ostringstream os;
+    string short_fill;
+    if(std::any_of(options_.begin(), options_.end(),
+        [](auto const& el){ return el.short_.size(); }
+    )) short_fill = "    "; // filler for "-o, "
 
-    return os.str();
+    size_t cell_0_max = 0;
+    std::vector<std::tuple<string, string>> rows;
+
+    ////////////////////
+    string cell_0 = "Usage: " + string{program};
+
+    if(options_.size()) cell_0 += " [option]...";
+    if(params_.size())
+    {
+        for(auto const& el : params_)
+        {
+            if(el.opt_) cell_0 += " [" + el.name_ + "]";
+            else cell_0 += " <" + el.name_ + ">";
+        }
+        if(params_.back().mul_) cell_0 += "...";
+    }
+    rows.emplace_back(std::move(cell_0), "");
+
+    ////////////////////
+    if(options_.size())
+    {
+        rows.push_back({ }); // add empty row before options
+        for(auto const& el : options_)
+        {
+            string cell_0, cell_1;
+
+            if(el.short_.size())
+            {
+                cell_0 += el.short_; // "-o"
+                if(el.long_.size())
+                {
+                    cell_0 += ", " + el.long_; // "-o, --opt-name"
+                    if(el.valname_.size()) cell_0 += "="; // "-o, --opt-name="
+                }
+                else if(el.valname_.size()) cell_0 += " "; // "-o "
+            }
+            else
+            {
+                cell_0 += short_fill + el.long_; // "    --opt-name"
+                if(el.valname_.size()) cell_0 += "="; // "    --opt-name="
+            }
+
+            if(el.valname_.size())
+            {
+                if(el.optval_) cell_0 += "[" + el.valname_ + "]"; // "...[val]"
+                else cell_0 += "<" + el.valname_ + ">"; // "...<val>"
+            }
+
+            cell_0_max = std::max(cell_0_max, cell_0.size());
+
+            std::istringstream iss{el.description_ + "\n"};
+            std::getline(iss, cell_1);
+
+            // add option and 1st line of description
+            rows.emplace_back(std::move(cell_0), std::move(cell_1));
+            // add remaining description lines (if any)
+            while(std::getline(iss, cell_1)) rows.emplace_back("", std::move(cell_1));
+        }
+    }
+
+    ////////////////////
+    if(params_.size())
+    {
+        rows.push_back({ }); // add empty row before params
+        for(auto const& el : params_)
+        {
+            cell_0_max = std::max(cell_0_max, el.name_.size());
+
+            std::istringstream iss{el.description_ + "\n"};
+            string cell_1;
+            std::getline(iss, cell_1);
+
+            // add param and 1st line of description
+            rows.emplace_back(el.name_, std::move(cell_1));
+            // add remaining description lines (if any)
+            while(std::getline(iss, cell_1)) rows.emplace_back("", std::move(cell_1));
+        }
+    }
+
+    ////////////////////
+    if(description.size())
+    {
+        rows.push_back({ });
+        rows.emplace_back(description, "");
+    }
+
+    ////////////////////
+    std::ostringstream oss;
+    oss << std::left;
+
+    for(auto const& [ cell_0, cell_1 ] : rows)
+    {
+        oss << std::setw(cell_0_max) << cell_0;
+        if(cell_1.size()) oss << "    " << cell_1;
+        oss << "\n";
+    }
+
+    auto text = oss.str();
+    text.pop_back(); // remove trailing '\n
+
+    return text;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
