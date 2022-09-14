@@ -33,7 +33,7 @@ struct argval
     auto count() const { return data_.size(); }
     auto empty() const { return data_.empty(); }
 
-    explicit operator bool() { return !empty(); }
+    explicit operator bool() const { return !empty(); }
 
     auto const& values() const { return data_; }
     auto const& value() const { return data_.at(0); }
