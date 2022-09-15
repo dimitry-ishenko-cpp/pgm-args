@@ -137,7 +137,7 @@ struct args
     template<typename... Args>
     void add(Args&&... args) { add(arg{ std::forward<Args>(args)... }); }
 
-    argval const& operator[](string_view) const;
+    argval const& operator[](const string&) const;
 
     void parse(int argc, char* argv[]);
     string usage(string_view program, string_view preamble = { }, string_view prologue = { }, string_view epilogue = { }) const;

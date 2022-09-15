@@ -212,7 +212,7 @@ inline void args::add_param(param new_)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-inline argval const& args::operator[](string_view name) const
+inline argval const& args::operator[](const string& name) const
 {
     if(!name.empty())
     {
@@ -224,7 +224,7 @@ inline argval const& args::operator[](string_view name) const
             it != params_.end()
         ) return it->values_;
     }
-    throw invalid_argument{"option or param '"+string{name}+"' not defined"};
+    throw invalid_argument{"option or param '"+name+"' not defined"};
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -336,7 +336,7 @@ inline void args::parse(int argc, char* argv[])
     for(auto const& el : options_)
         if(el.req_ && !el.values_.size())
             throw missing_argument{"option "+(
-                el.short_.size() && el.long_.size() ?  "'"+el.short_+"/"+el.long_+"'" :
+                el.short_.size() && el.long_.size() ? "'"+el.short_+"/"+el.long_+"'" :
                     el.short_.size() ? "'"+el.short_+"'" : "'"+el.long_+"'"
             )+" is required"};
 
