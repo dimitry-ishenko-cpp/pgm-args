@@ -16,17 +16,16 @@ Here is a ~~concise~~ example that shows capabilities of **pgm::args**:
 int main(int argc, char* argv[])
 try
 {
-    std::string name{ argv[0] };
+    namespace fs = std::filesystem;
 
-    // 1&2. Define options and positional parameters.
+    std::string name{ fs::path{argv[0]}.filename() };
+
+    // 1 & 2. Define options and positional parameters.
     pgm::args args
     {
-        { "-a", "--address", "IP", "Specify IP address to bind to. Default: 0.0.0.0
-                                   "(bind to all)."                                 },
-        { "-p", "--port", "N",     "Specify port number to listen on. Default: 42." },
         { "-h", "--help",          "Print this help screen and exit."               },
         { "-v", "--version",       "Show version number and exit."                  },
-        { "path?+",                "List of files to read data from."               },
+        { "",                "List of files to read data from."               },
     };
 
     // 3. Parse command line arguments.
@@ -228,11 +227,11 @@ parameter:
   if(args["--help"]) show_usage_and_exit();
   if(args["--version"]) show_version_and_exit();
   ```
-  
+
   If your program includes one or more mandatory options or positional parameters,
   but there are certain options (eg, `--help` and `--version`) that should be
   handled even when those are missing, you can do the following:
-  
+
   ```cpp
   std::exception_ptr ep;
   try { args.parse(argc, argv); }

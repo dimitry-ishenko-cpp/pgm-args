@@ -81,29 +81,29 @@ constexpr bool is_param_name(string_view s)
         && std::all_of(begin(s), end(s), [](char c){ return std::isgraph(c); });
 }
 
-// find container element with member equal to `what`
-template<typename Cont, typename T>
-inline auto find_equal(Cont&& cont, string T::* memptr, string_view what)
+// find container element with member equal to `val`
+template<typename Cont, typename Elem, typename T>
+inline auto find_equal(Cont&& cont, T Elem::* memptr, const T& val)
 {
     return std::find_if(begin(cont), end(cont),
-        [&](T const& el){ return el.*memptr == what; }
+        [&](const Elem& el){ return el.*memptr == val; }
     );
 }
 
-// find container element with either of two members equal to `what`
-template<typename Cont, typename T>
-inline auto find_equal(Cont&& cont, string T::* memptr1, string T::* memptr2, string_view what)
+// find container element with either of two members equal to `val`
+template<typename Cont, typename Elem, typename T>
+inline auto find_equal(Cont&& cont, T Elem::* memptr1, T Elem::* memptr2, const T& val)
 {
     return std::find_if(begin(cont), end(cont),
-        [&](T const& el){ return el.*memptr1 == what || el.*memptr2 == what; }
+        [&](const Elem& el){ return el.*memptr1 == val || el.*memptr2 == val; }
     );
 }
 
-// return true if container has an element with member equal to `what`
-template<typename Cont, typename T>
-inline auto has_equal(Cont&& cont, string T::* elem, string_view what)
+// return true if container has an element with member equal to `val`
+template<typename Cont, typename Elem, typename T>
+inline auto has_equal(Cont&& cont, T Elem::* elem, const T& val)
 {
-    return find_equal(cont, elem, what) != end(cont);
+    return find_equal(cont, elem, val) != end(cont);
 }
 
 // return quoted `name`
