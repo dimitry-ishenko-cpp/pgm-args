@@ -106,6 +106,9 @@ inline auto has_equal(Cont&& cont, string T::* elem, string_view what)
     return find_equal(cont, elem, what) != end(cont);
 }
 
+// return quoted `name`
+inline auto q(const std::string& name) { return "'" + name + "'"; }
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -120,7 +123,7 @@ inline arg::arg(string name1, spec spc, string description)
     else if(is_param_name(name1))
         val_ = param::from(move(name1), spc, move(description));
 
-    else throw invalid_definition{"'"+name1+"' not a valid option or param name"};
+    else throw invalid_definition{q(name1)+" not a valid option or param name"};
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -134,29 +137,29 @@ inline arg::arg(string name1, string name2, spec spc, string description)
         else if(is_valname(name2))
             val_ = option::from(move(name1), { }, move(name2), spc, move(description));
 
-        else throw invalid_definition{"'"+name2+"' not a valid long option or option value name"};
+        else throw invalid_definition{q(name2)+" not a valid long option or option value name"};
     }
     else if(is_long_option(name1))
     {
         if(is_valname(name2))
             val_ = option::from({ }, move(name1), move(name2), spc, move(description));
 
-        else throw invalid_definition{"'"+name2+"' not a valid option value name"};
+        else throw invalid_definition{q(name2)+" not a valid option value name"};
     }
-    else throw invalid_definition{"'"+name1+"' not a valid short or long option name"};
+    else throw invalid_definition{q(name1)+" not a valid short or long option name"};
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 inline arg::arg(string name1, string name2, string name3, spec spc, string description)
 {
     if(!is_short_option(name1))
-        throw invalid_definition{"'"+name1+"' not a valid short option name"};
+        throw invalid_definition{q(name1)+" not a valid short option name"};
 
     else if(!is_long_option(name2))
-        throw invalid_definition{"'"+name2+"' not a valid long option name" };
+        throw invalid_definition{q(name2)+" not a valid long option name" };
 
     else if(!is_valname(name3))
-        throw invalid_definition{"'"+name3+"' not a valid option value name"};
+        throw invalid_definition{q(name3)+" not a valid option value name"};
 
     else val_ = option::from(move(name1), move(name2), move(name3), spc, move(description));
 }
@@ -179,13 +182,13 @@ inline void args::add_option(option new_)
     if(new_.short_.size())
     {
         if(has_equal(options_, &option::short_, new_.short_))
-            throw invalid_definition{"duplicate short option '"+new_.short_+"'"};
+            throw invalid_definition{"duplicate short option "+q(new_.short_)};
     }
 
     if(new_.long_.size())
     {
         if(has_equal(options_, &option::long_, new_.long_))
-            throw invalid_definition{"duplicate long option '"+new_.long_+"'"};
+            throw invalid_definition{"duplicate long option "+q(new_.long_)};
     }
 
     options_.push_back(move(new_));
@@ -195,16 +198,16 @@ inline void args::add_option(option new_)
 inline void args::add_param(param new_)
 {
     if(has_equal(params_, &param::name_, new_.name_))
-        throw invalid_definition{"duplicate param '"+new_.name_+"'"};
+        throw invalid_definition{"duplicate param "+q(new_.name_)};
 
     if(params_.size())
     {
         if(params_.back().mul_) throw invalid_definition{
-            "'"+new_.name_+"' after multi-value param"
+            q(new_.name_)+" after multi-value param"
         };
 
         if(params_.back().opt_ && !new_.opt_) throw invalid_definition{
-            "non-optional '"+new_.name_+"' after optional param"
+            "non-optional "+q(new_.name_)+" after optional param"
         };
     }
 
@@ -224,7 +227,7 @@ inline argval const& args::operator[](const string& name) const
             it != params_.end()
         ) return it->values_;
     }
-    throw invalid_argument{"option or param '"+name+"' not defined"};
+    throw invalid_argument{"option or param "+q(name)+" not defined"};
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -288,7 +291,7 @@ inline void args::parse(int argc, char* argv[])
             // see if we have this option
             auto it = find_equal(options_, &option::short_, &option::long_, name);
             if(it == options_.end())
-                throw invalid_argument{"option '"+name+"' not defined"};
+                throw invalid_argument{"option "+q(name)+" not defined"};
 
             if(it->valname_.empty()) // doesn't take values
             {
@@ -300,7 +303,7 @@ inline void args::parse(int argc, char* argv[])
                         // and push them to the front of the queue
                         args.push_front("-" + *value);
                     }
-                    else throw invalid_argument{"option '"+name+"' doesn't take values"};
+                    else throw invalid_argument{"option "+q(name)+" doesn't take values"};
                 }
                 value = ""; // indicate presence
             }
@@ -321,12 +324,12 @@ inline void args::parse(int argc, char* argv[])
                     // take the next arg unless it's "--"
                     if(args.size() && args[0] != "--")
                         value = pop(args);
-                    else throw missing_argument{"option '"+name+"' requires a value"};
+                    else throw missing_argument{"option "+q(name)+" requires a value"};
                 }
             }
 
             if(it->values_.size() && !it->mul_)
-                throw invalid_argument{"duplicate option '"+name+"'"};
+                throw invalid_argument{"duplicate option "+q(name)};
 
             it->values_.add(std::move(*value));
         }
@@ -335,9 +338,9 @@ inline void args::parse(int argc, char* argv[])
     // check required options
     for(auto const& el : options_)
         if(el.req_ && !el.values_.size())
-            throw missing_argument{"option '"+(
+            throw missing_argument{"option "+q(
                 el.short_.empty() ? el.long_ : el.long_.empty() ? el.short_ : el.short_+", "+el.long_
-            )+"' is required"};
+            )+" is required"};
 
     // process saved params
     for(auto& el : params_)
@@ -347,10 +350,10 @@ inline void args::parse(int argc, char* argv[])
             do el.values_.add(pop(saved_params));
             while(el.mul_ && saved_params.size());
         }
-        else if(!el.opt_) throw missing_argument{"param '"+el.name_+"' is required"};
+        else if(!el.opt_) throw missing_argument{"param "+q(el.name_)+" is required"};
     }
 
-    if(saved_params.size()) throw invalid_argument{"extra param '"+saved_params[0]+"'"};
+    if(saved_params.size()) throw invalid_argument{"extra param "+q(saved_params[0])};
 }
 
 ////////////////////////////////////////////////////////////////////////////////
