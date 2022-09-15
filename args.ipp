@@ -335,10 +335,9 @@ inline void args::parse(int argc, char* argv[])
     // check required options
     for(auto const& el : options_)
         if(el.req_ && !el.values_.size())
-            throw missing_argument{"option "+(
-                el.short_.size() && el.long_.size() ? "'"+el.short_+"/"+el.long_+"'" :
-                    el.short_.size() ? "'"+el.short_+"'" : "'"+el.long_+"'"
-            )+" is required"};
+            throw missing_argument{"option '"+(
+                el.short_.empty() ? el.long_ : el.long_.empty() ? el.short_ : el.short_+", "+el.long_
+            )+"' is required"};
 
     // process saved params
     for(auto& el : params_)
@@ -351,9 +350,7 @@ inline void args::parse(int argc, char* argv[])
         else if(!el.opt_) throw missing_argument{"param '"+el.name_+"' is required"};
     }
 
-    if(saved_params.size()) throw invalid_argument{
-        "extra param '"+saved_params[0]+"'"
-    };
+    if(saved_params.size()) throw invalid_argument{"extra param '"+saved_params[0]+"'"};
 }
 
 ////////////////////////////////////////////////////////////////////////////////
