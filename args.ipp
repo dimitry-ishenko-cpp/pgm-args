@@ -28,27 +28,6 @@ constexpr auto operator|(spec lhs, spec rhs)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-option option::from(string short_, string long_, string valname, spec spc, string description)
-{
-    return option{
-        move(short_), move(long_), move(valname), move(description),
-        static_cast<bool>(spc & req),
-        static_cast<bool>(spc & mul),
-        static_cast<bool>(spc & optval),
-    };
-}
-
-////////////////////////////////////////////////////////////////////////////////
-param param::from(string name, spec spc, string description)
-{
-    return param{
-        move(name), move(description),
-        static_cast<bool>(spc & opt),
-        static_cast<bool>(spc & mul),
-    };
-}
-
-////////////////////////////////////////////////////////////////////////////////
 namespace
 {
 
@@ -79,6 +58,27 @@ constexpr bool is_param_name(string_view s)
 {
     return size(s) > 0 && s[0] != '-'
         && std::all_of(begin(s), end(s), [](char c){ return std::isgraph(c); });
+}
+
+////////////////////////////////////////////////////////////////////////////////
+inline auto make_option(string short_, string long_, string valname, spec spc, string description)
+{
+    return option{
+        move(short_), move(long_), move(valname), move(description),
+        static_cast<bool>(spc & req),
+        static_cast<bool>(spc & mul),
+        static_cast<bool>(spc & optval),
+    };
+}
+
+////////////////////////////////////////////////////////////////////////////////
+inline auto make_param(string name, spec spc, string description)
+{
+    return param{
+        move(name), move(description),
+        static_cast<bool>(spc & opt),
+        static_cast<bool>(spc & mul),
+    };
 }
 
 // find container element with member equal to `val`
@@ -115,13 +115,13 @@ inline auto q(const std::string& name) { return "'" + name + "'"; }
 inline arg::arg(string name1, spec spc, string description)
 {
     if(is_short_option(name1))
-        val_ = option::from(move(name1), { }, { }, spc, move(description));
+        val_ = make_option(move(name1), { }, { }, spc, move(description));
 
     else if(is_long_option(name1))
-        val_ = option::from({ }, move(name1), { }, spc, move(description));
+        val_ = make_option({ }, move(name1), { }, spc, move(description));
 
     else if(is_param_name(name1))
-        val_ = param::from(move(name1), spc, move(description));
+        val_ = make_param(move(name1), spc, move(description));
 
     else throw invalid_definition{"bad option or param name " + q(name1)};
 }
@@ -132,17 +132,17 @@ inline arg::arg(string name1, string name2, spec spc, string description)
     if(is_short_option(name1))
     {
         if(is_long_option(name2))
-            val_ = option::from(move(name1), move(name2), { }, spc, move(description));
+            val_ = make_option(move(name1), move(name2), { }, spc, move(description));
 
         else if(is_valname(name2))
-            val_ = option::from(move(name1), { }, move(name2), spc, move(description));
+            val_ = make_option(move(name1), { }, move(name2), spc, move(description));
 
         else throw invalid_definition{"bad long option or option value name " + q(name2)};
     }
     else if(is_long_option(name1))
     {
         if(is_valname(name2))
-            val_ = option::from({ }, move(name1), move(name2), spc, move(description));
+            val_ = make_option({ }, move(name1), move(name2), spc, move(description));
 
         else throw invalid_definition{"bad option value name " + q(name2)};
     }
@@ -161,7 +161,7 @@ inline arg::arg(string name1, string name2, string name3, spec spc, string descr
     else if(!is_valname(name3))
         throw invalid_definition{"bad option value name " + q(name3)};
 
-    else val_ = option::from(move(name1), move(name2), move(name3), spc, move(description));
+    else val_ = make_option(move(name1), move(name2), move(name3), spc, move(description));
 }
 
 ////////////////////////////////////////////////////////////////////////////////

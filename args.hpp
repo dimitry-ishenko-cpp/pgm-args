@@ -75,8 +75,6 @@ struct option
     bool optval_ = false;   // option value is optional
 
     argval values_;         // parsed value(s)
-
-    static option from(string short_, string long_, string valname, spec spc, string description);
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -90,8 +88,6 @@ struct param
     bool mul_ = false;      // can be specified multiple times
 
     argval values_;         // parsed value(s)
-
-    static param from(string name, spec spc, string description);
 };
 
 ////////////////////////////////////////////////////////////////////////////////
