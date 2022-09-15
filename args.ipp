@@ -81,31 +81,6 @@ inline auto make_param(string name, spec spc, string description)
     };
 }
 
-// find container element with member equal to `val`
-template<typename Cont, typename Elem, typename T>
-inline auto find_equal(Cont&& cont, T Elem::* memptr, const T& val)
-{
-    return std::find_if(begin(cont), end(cont),
-        [&](const Elem& el){ return el.*memptr == val; }
-    );
-}
-
-// find container element with either of two members equal to `val`
-template<typename Cont, typename Elem, typename T>
-inline auto find_equal(Cont&& cont, T Elem::* memptr1, T Elem::* memptr2, const T& val)
-{
-    return std::find_if(begin(cont), end(cont),
-        [&](const Elem& el){ return el.*memptr1 == val || el.*memptr2 == val; }
-    );
-}
-
-// return true if container has an element with member equal to `val`
-template<typename Cont, typename Elem, typename T>
-inline auto has_equal(Cont&& cont, T Elem::* elem, const T& val)
-{
-    return find_equal(cont, elem, val) != end(cont);
-}
-
 // return quoted `name`
 inline auto q(const std::string& name) { return "'" + name + "'"; }
 
@@ -181,13 +156,17 @@ inline void args::add_option(option new_)
 {
     if(new_.short_.size())
     {
-        if(has_equal(options_, &option::short_, new_.short_))
+        auto pred = [&](auto const& el){ return el.short_ == new_.short_; };
+
+        if(std::any_of(options_.begin(), options_.end(), pred))
             throw invalid_definition{"duplicate option " + q(new_.short_)};
     }
 
     if(new_.long_.size())
     {
-        if(has_equal(options_, &option::long_, new_.long_))
+        auto pred = [&](auto const& el){ return el.long_ == new_.long_; };
+
+        if(std::any_of(options_.begin(), options_.end(), pred))
             throw invalid_definition{"duplicate option " + q(new_.long_)};
     }
 
@@ -197,7 +176,9 @@ inline void args::add_option(option new_)
 ////////////////////////////////////////////////////////////////////////////////
 inline void args::add_param(param new_)
 {
-    if(has_equal(params_, &param::name_, new_.name_))
+    auto pred = [&](auto const& el){ return el.name_ == new_.name_; };
+
+    if(std::any_of(params_.begin(), params_.end(), pred))
         throw invalid_definition{"duplicate param " + q(new_.name_)};
 
     if(params_.size())
@@ -219,13 +200,15 @@ inline argval const& args::operator[](const string& name) const
 {
     if(!name.empty())
     {
-        if(auto it = find_equal(options_, &option::short_, &option::long_, name);
-            it != options_.end()
-        ) return it->values_;
+        auto pred1 = [&](auto const& el){ return el.short_ == name || el.long_ == name; };
 
-        if(auto it = find_equal(params_, &param::name_, name);
-            it != params_.end()
-        ) return it->values_;
+        auto it1 = std::find_if(options_.begin(), options_.end(), pred1);
+        if(it1 != options_.end()) return it1->values_;
+
+        auto pred2 = [&](auto const& el){ return el.name_ == name; };
+
+        auto it2 = std::find_if(params_.begin(), params_.end(), pred2);
+        if(it2 != params_.end()) return it2->values_;
     }
     throw invalid_argument{"bad option or param " + q(name)};
 }
@@ -289,11 +272,12 @@ inline void args::parse(int argc, char* argv[])
             }
 
             // see if we have this option
-            auto it = find_equal(options_, &option::short_, &option::long_, name);
-            if(it == options_.end())
-                throw invalid_argument{"bad option " + q(name)};
+            auto pred = [&](auto const& el){ return el.short_ == name || el.long_ == name; };
 
-            if(it->valname_.empty()) // doesn't take values
+            auto it = std::find_if(options_.begin(), options_.end(), pred);
+            if(it == options_.end()) throw invalid_argument{"bad option " + q(name)};
+
+            else if(it->valname_.empty()) // doesn't take values
             {
                 if(value) // but we have one
                 {
