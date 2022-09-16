@@ -196,7 +196,7 @@ inline void args::add_param(param new_)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-inline argval const& args::operator[](const string& name) const
+inline argval const& args::operator[](string_view name) const
 {
     if(!name.empty())
     {
@@ -210,7 +210,7 @@ inline argval const& args::operator[](const string& name) const
         auto it2 = std::find_if(params_.begin(), params_.end(), pred2);
         if(it2 != params_.end()) return it2->values_;
     }
-    throw invalid_argument{"bad option or param " + q(name)};
+    throw invalid_argument{"bad option or param " + q(string{name})};
 }
 
 ////////////////////////////////////////////////////////////////////////////////
