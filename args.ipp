@@ -312,7 +312,7 @@ inline void args::parse(int argc, char* argv[])
                 }
             }
 
-            if(it->values_.size() && !it->mul_)
+            if(!it->mul_ && !it->values_.empty())
                 throw invalid_argument{"duplicate option " + q(name)};
 
             it->values_.add(std::move(*value));
@@ -321,7 +321,7 @@ inline void args::parse(int argc, char* argv[])
 
     // check required options
     for(auto const& el : options_)
-        if(el.req_ && !el.values_.size())
+        if(el.req_ && el.values_.empty())
             throw missing_argument{"option " + q(
                 el.short_.empty() ? el.long_ : el.long_.empty() ? el.short_ : el.short_+", "+el.long_
             ) + " is required"};

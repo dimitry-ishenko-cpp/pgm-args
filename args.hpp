@@ -46,7 +46,6 @@ private:
 
     friend class args;
     void add(string val) { data_.push_back(move(val)); }
-    auto size() const { return data_.size(); }
 };
 
 ////////////////////////////////////////////////////////////////////////////////
