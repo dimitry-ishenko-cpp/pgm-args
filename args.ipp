@@ -82,7 +82,7 @@ inline auto make_param(string name, spec spc, string description)
 }
 
 // return quoted `name`
-inline auto q(const std::string& name) { return "'" + name + "'"; }
+inline auto q(const string& name) { return "'" + name + "'"; }
 
 }
 
@@ -219,7 +219,7 @@ namespace
 
 inline auto pop(std::deque<string>& q)
 {
-    auto el = std::move(q.front());
+    auto el = move(q.front());
     q.pop_front();
     return el;
 }
@@ -245,12 +245,12 @@ inline void args::parse(int argc, char* argv[])
         auto arg = pop(args);
 
         if(had_token || is_not_option(arg)) // param ("", "-" or re: "[^-].+")
-            saved_params.push_back(std::move(arg));
+            saved_params.push_back(move(arg));
 
         else if(arg == "--") // end-of-options token
             had_token = true;
 
-        else  // option (re: "-.+")
+        else // option (re: "-.+")
         {
             string name;
             std::optional<string> value;
@@ -315,16 +315,16 @@ inline void args::parse(int argc, char* argv[])
             if(!it->mul_ && !it->values_.empty())
                 throw invalid_argument{"duplicate option " + q(name)};
 
-            it->values_.add(std::move(*value));
+            it->values_.add(move(*value));
         }
     }
 
     // check required options
     for(auto const& el : options_)
         if(el.req_ && el.values_.empty())
-            throw missing_argument{"option " + q(
-                el.short_.empty() ? el.long_ : el.long_.empty() ? el.short_ : el.short_+", "+el.long_
-            ) + " is required"};
+            throw missing_argument{
+                "option " + q(el.short_.empty() ? el.long_ : el.long_.empty() ? el.short_ : el.short_+", "+el.long_) + " is required"
+            };
 
     // process saved params
     for(auto& el : params_)
@@ -371,7 +371,7 @@ inline string args::usage(string_view program, string_view preamble, string_view
         }
         if(params_.back().mul_) cell_0 += "...";
     }
-    rows.emplace_back(std::move(cell_0), "");
+    rows.emplace_back(move(cell_0), "");
 
     ////////////////////
     if(prologue.size())
@@ -415,8 +415,8 @@ inline string args::usage(string_view program, string_view preamble, string_view
             string cell_1;
             std::getline(iss, cell_1);
 
-            rows.emplace_back(std::move(cell_0), std::move(cell_1));
-            while(std::getline(iss, cell_1)) rows.emplace_back("", std::move(cell_1));
+            rows.emplace_back(move(cell_0), move(cell_1));
+            while(std::getline(iss, cell_1)) rows.emplace_back("", move(cell_1));
         }
     }
 
@@ -432,8 +432,8 @@ inline string args::usage(string_view program, string_view preamble, string_view
             string cell_1;
             std::getline(iss, cell_1);
 
-            rows.emplace_back(el.name_, std::move(cell_1));
-            while(std::getline(iss, cell_1)) rows.emplace_back("", std::move(cell_1));
+            rows.emplace_back(el.name_, move(cell_1));
+            while(std::getline(iss, cell_1)) rows.emplace_back("", move(cell_1));
         }
     }
 
