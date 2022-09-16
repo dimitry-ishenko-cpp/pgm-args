@@ -156,17 +156,13 @@ inline void args::add_option(option new_)
 {
     if(new_.short_.size())
     {
-        auto pred = [&](auto const& el){ return el.short_ == new_.short_; };
-
-        if(std::any_of(options_.begin(), options_.end(), pred))
+        for(auto const& el : options_) if(el.short_ == new_.short_)
             throw invalid_definition{"duplicate option " + q(new_.short_)};
     }
 
     if(new_.long_.size())
     {
-        auto pred = [&](auto const& el){ return el.long_ == new_.long_; };
-
-        if(std::any_of(options_.begin(), options_.end(), pred))
+        for(auto const& el : options_) if(el.long_ == new_.long_)
             throw invalid_definition{"duplicate option " + q(new_.long_)};
     }
 
@@ -176,9 +172,7 @@ inline void args::add_option(option new_)
 ////////////////////////////////////////////////////////////////////////////////
 inline void args::add_param(param new_)
 {
-    auto pred = [&](auto const& el){ return el.name_ == new_.name_; };
-
-    if(std::any_of(params_.begin(), params_.end(), pred))
+    for(auto const& el : params_) if(el.name_ == new_.name_)
         throw invalid_definition{"duplicate param " + q(new_.name_)};
 
     if(params_.size())
@@ -200,15 +194,10 @@ inline argval const& args::operator[](string_view name) const
 {
     if(!name.empty())
     {
-        auto pred1 = [&](auto const& el){ return el.short_ == name || el.long_ == name; };
+        for(auto const& el : options_)
+            if(el.short_ == name || el.long_ == name) return el.values_;
 
-        auto it1 = std::find_if(options_.begin(), options_.end(), pred1);
-        if(it1 != options_.end()) return it1->values_;
-
-        auto pred2 = [&](auto const& el){ return el.name_ == name; };
-
-        auto it2 = std::find_if(params_.begin(), params_.end(), pred2);
-        if(it2 != params_.end()) return it2->values_;
+        for(auto const& el : params_) if(el.name_ == name) return el.values_;
     }
     throw invalid_argument{"bad option or param " + q(string{name})};
 }
@@ -343,10 +332,9 @@ inline void args::parse(int argc, char* argv[])
 ////////////////////////////////////////////////////////////////////////////////
 inline string args::usage(string_view program, string_view preamble, string_view prologue, string_view epilogue) const
 {
-    string short_fill;
-    if(std::any_of(options_.begin(), options_.end(),
+    string short_fill = std::any_of(options_.begin(), options_.end(),
         [](auto const& el){ return el.short_.size(); }
-    )) short_fill = "    "; // filler for "-o, "
+    ) ? "    " : ""; // filler for "-o, "
 
     size_t cell_0_max = 0;
     std::vector<std::tuple<string, string>> rows;
