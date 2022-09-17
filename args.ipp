@@ -175,16 +175,8 @@ inline void args::add_param(param new_)
     for(auto const& el : params_) if(el.name_ == new_.name_)
         throw invalid_definition{"duplicate param " + q(new_.name_)};
 
-    if(params_.size())
-    {
-        if(params_.back().mul_) throw invalid_definition{
-            q(new_.name_) + " after multi-value param"
-        };
-
-        if(params_.back().opt_ && !new_.opt_) throw invalid_definition{
-            "non-optional " + q(new_.name_) + " after optional param"
-        };
-    }
+    for(auto const& el : params_) if(new_.mul_ && el.mul_)
+        throw invalid_argument{"more than one multi-value param " + q(new_.name_)};
 
     params_.push_back(move(new_));
 }
@@ -227,14 +219,14 @@ inline void args::parse(int argc, char* argv[])
     for(auto n = 1; n < argc; ++n) args.emplace_back(argv[n]);
 
     bool had_token = false;
-    std::deque<string> saved_params;
+    std::deque<string> saved;
 
     while(args.size())
     {
         auto arg = pop(args);
 
         if(had_token || is_not_option(arg)) // param ("", "-" or re: "[^-].+")
-            saved_params.push_back(move(arg));
+            saved.push_back(move(arg));     // process at the end
 
         else if(arg == "--") // end-of-options token
             had_token = true;
@@ -260,7 +252,7 @@ inline void args::parse(int argc, char* argv[])
                 if(arg.size() > 2) value = arg.substr(2); // with value (re: "-[^-].+")
             }
 
-            // see if we have this option
+            // find matching definition
             auto pred = [&](auto const& el){ return el.short_ == name || el.long_ == name; };
 
             auto it = std::find_if(options_.begin(), options_.end(), pred);
@@ -272,8 +264,8 @@ inline void args::parse(int argc, char* argv[])
                 {
                     if(name.size() == 2) // short option
                     {
-                        // assume this was a group of short options (eg, -abc)
-                        // and push them to the front of the queue
+                        // maybe this is a group of short options? (eg, -abc)
+                        // push them to the front of the queue
                         args.push_front("-" + *value);
                     }
                     else throw invalid_argument{q(name) + " doesn't take values"};
@@ -310,23 +302,31 @@ inline void args::parse(int argc, char* argv[])
 
     // check required options
     for(auto const& el : options_)
-        if(el.req_ && el.values_.empty())
-            throw missing_argument{
-                "option " + q(el.short_.empty() ? el.long_ : el.long_.empty() ? el.short_ : el.short_+", "+el.long_) + " is required"
-            };
+        if(el.req_ && el.values_.empty()) throw missing_argument{
+            "option " + q(el.short_.empty() ? el.long_ : el.long_.empty() ? el.short_ : el.short_+", "+el.long_) + " is required"
+        };
 
-    // process saved params
+    // process params
+    auto min = std::count_if(params_.begin(), params_.end(),
+        [&](auto const& el){ return !el.opt_; }
+    );
+    if(saved.size() < min) throw missing_argument{
+        "need at least " + std::to_string(min) + " params"
+    };
+
+    auto opt = saved.size() - min;
+    auto mul = saved.size() > params_.size() ? saved.size() - params_.size() : 0;
+
     for(auto& el : params_)
     {
-        if(saved_params.size())
-        {
-            do el.values_.add(pop(saved_params));
-            while(el.mul_ && saved_params.size());
-        }
-        else if(!el.opt_) throw missing_argument{"param " + q(el.name_) + " is required"};
+        if(el.opt_ && !opt) continue;
+        opt -= el.opt_;
+
+        do el.values_.add(pop(saved));
+        while(el.mul_ && mul--);
     }
 
-    if(saved_params.size()) throw invalid_argument{"extra param " + q(saved_params[0])};
+    if(saved.size()) throw invalid_argument{"extra param " + q(saved[0])};
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -356,8 +356,9 @@ inline string args::usage(string_view program, string_view preamble, string_view
         {
             if(el.opt_) cell_0 += " [" + el.name_ + "]";
             else cell_0 += " <" + el.name_ + ">";
+
+            if(el.mul_) cell_0 += "...";
         }
-        if(params_.back().mul_) cell_0 += "...";
     }
     rows.emplace_back(move(cell_0), "");
 
