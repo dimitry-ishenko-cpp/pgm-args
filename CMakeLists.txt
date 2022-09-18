@@ -15,6 +15,7 @@ install(FILES ${HEADERS} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
 ####################
 # examples
+add_executable(example1 ${HEADERS} example/example1.cpp)
 add_executable(example2 ${HEADERS} example/example2.cpp)
 
 ####################
