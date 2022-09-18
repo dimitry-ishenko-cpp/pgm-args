@@ -309,20 +309,19 @@ inline void args::parse(int argc, char* argv[])
     // process params
     auto req_n = std::count_if(params_.begin(), params_.end(),
         [&](auto const& el){ return !el.opt_; }
-    ); // req params to fill
-    auto opt_n = saved.size() > req_n ? saved.size() - req_n : 0; // opt params to fill
-    auto mul_n = saved.size() > params_.size() ? saved.size() - params_.size() : 0;
+    ); // # of non-opt params to fill
 
-    for(auto& el : params_)
+    for(auto it = params_.begin(), end = params_.end(); it != end; ++it)
     {
-        if(el.opt_){ if(opt_n) --opt_n; else continue; }
+        if(!it->opt_) --req_n;
+        else if(saved.size() <= req_n) continue; // not enough for opt params
 
         if(saved.size())
         {
-            do el.values_.add(pop(saved));
-            while(el.mul_ && mul_n--);
+            do it->values_.add(pop(saved));
+            while(it->mul_ && saved.size() >= end - it); // munch extra values
         }
-        else throw missing_argument{"param " + q(el.name_) + " is required"};
+        else throw missing_argument{"param " + q(it->name_) + " is required"};
     }
 
     if(saved.size()) throw invalid_argument{"extra param " + q(saved[0])};
