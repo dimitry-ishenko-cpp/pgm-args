@@ -3,13 +3,17 @@
 #include <iostream>
 #include <vector>
 
+// 0. Include header.
 #include "pgm/args.hpp"
+
+void show_usage(const pgm::args& args, std::string_view program);
+void show_version(std::string_view program);
 
 int main(int argc, char* argv[])
 try
 {
     namespace fs = std::filesystem;
-    std::string name{ fs::path{argv[0]}.filename() };
+    std::string program{ fs::path{argv[0]}.filename() };
 
     // 1 & 2. Define options and positional parameters.
     pgm::args args
@@ -37,32 +41,15 @@ try
 
     // 4. Examine options and positional parameters.
     if(args["--help"])
-    {
-        auto preamble =
-R"(sync is a dummy file transfer program created solely for demonstrating
-capabilities of pgm::args.)";
+        show_usage(args, program);
 
-        auto epilogue =
-R"(You must specify at least one source file or directory and a destination to
-copy to. For example:
-
-    sync *.c /dest/path/
-
-In theory, this would transfer all files matching the pattern *.c from the
-current directory to the directory /dest/path/. However, since this is a dummy
-program, nothing will actually be transferred.)";
-
-        std::cout << args.usage(name, preamble, { }, epilogue) << std::endl;
-    }
     else if(args["--version"])
-    {
-        std::cout << name << " 0.42" << std::endl;
-    }
+        show_version(program);
+
     else if(ep)
-    {
         std::rethrow_exception(ep);
-    }
-    else
+
+    else // process other options
     {
         auto verbose_level = args["-v"].count();
 
@@ -96,3 +83,27 @@ catch(const std::exception& e)
     std::cerr << e.what() << std::endl;
     return 1;
 };
+
+void show_usage(const pgm::args& args, std::string_view program)
+{
+    auto preamble =
+R"(sync is a dummy file transfer program created solely for demonstrating
+capabilities of pgm::args.)";
+
+    auto epilogue =
+R"(You must specify at least one source file or directory and a destination to
+copy to. For example:
+
+    sync *.c /dest/path/
+
+In theory, this would transfer all files matching the pattern *.c from the
+current directory to the directory /dest/path/. However, since this is a dummy
+program, nothing will actually be transferred.)";
+
+    std::cout << args.usage(program, preamble, { }, epilogue) << std::endl;
+}
+
+void show_version(std::string_view program)
+{
+    std::cout << program << " 0.42" << std::endl;
+}
