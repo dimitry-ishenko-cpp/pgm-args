@@ -8,16 +8,14 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 ####################
 # headers
+set(HEADERS args.hpp args.ipp)
+
 include(GNUInstallDirs)
-install(FILES args.hpp args.ipp
-    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-)
+install(FILES ${HEADERS} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
 ####################
-# example
-add_executable(example
-    args.hpp args.ipp example/example2.cpp
-)
+# examples
+add_executable(example2 ${HEADERS} example/example2.cpp)
 
 ####################
 # tests
@@ -33,7 +31,7 @@ if(BUILD_TESTS)
         find_package(GTest REQUIRED)
     endif()
 
-    add_executable(test_args test/test_args.cpp)
+    add_executable(test_args ${HEADERS} test/test_args.cpp)
     target_link_libraries(test_args GTest::gtest_main)
 
     include(GoogleTest)
