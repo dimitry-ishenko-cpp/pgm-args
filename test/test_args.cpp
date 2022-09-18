@@ -95,6 +95,14 @@ pgm::args params_1
     { "p5", pgm::opt, "" },
 };
 
+TEST(params_1, not_enough_0)
+{
+    auto args = params_1;
+    auto [argc, argv] = to_argc_argv({ "pgm" });
+
+    EXPECT_THROW({ args.parse(argc, argv); }, pgm::missing_argument);
+}
+
 TEST(params_1, not_enough_1)
 {
     auto args = params_1;
