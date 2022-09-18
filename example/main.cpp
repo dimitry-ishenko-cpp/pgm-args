@@ -48,8 +48,9 @@ copy to. For example:
 
     sync *.c /dest/path/
 
-This would transfer all files matching the pattern *.c from the current
-directory to the directory /dest/path/.)";
+In theory, this would transfer all files matching the pattern *.c from the
+current directory to the directory /dest/path/. However, since this is a dummy
+program, nothing will actually be transferred.)";
 
         std::cout << args.usage(name, preamble, { }, epilogue) << std::endl;
     }
@@ -71,8 +72,9 @@ directory to the directory /dest/path/.)";
         auto copy_links  = !!args["-l"];
         auto deref_links = !!args["-L"];
 
-        if(copy_links && deref_links)
-            throw pgm::invalid_argument{"'-l' and '-L' are mutually exclusive"};
+        if(copy_links && deref_links) throw pgm::invalid_argument{
+            "options '-l' and '-L' are mutually exclusive"
+        };
 
         auto chmod = args["--chmod"].value_or("0644");
 
