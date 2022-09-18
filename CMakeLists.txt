@@ -16,7 +16,7 @@ install(FILES args.hpp args.ipp
 ####################
 # example
 add_executable(example
-    args.hpp args.ipp example/main.cpp
+    args.hpp args.ipp example/example2.cpp
 )
 
 ####################
