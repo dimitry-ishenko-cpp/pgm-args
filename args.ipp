@@ -307,23 +307,22 @@ inline void args::parse(int argc, char* argv[])
         };
 
     // process params
-    auto min = std::count_if(params_.begin(), params_.end(),
+    auto req_n = std::count_if(params_.begin(), params_.end(),
         [&](auto const& el){ return !el.opt_; }
-    );
-    if(saved.size() < min) throw missing_argument{
-        "need at least " + std::to_string(min) + " params"
-    };
-
-    auto opt = saved.size() - min;
-    auto mul = saved.size() > params_.size() ? saved.size() - params_.size() : 0;
+    ); // req params to fill
+    auto opt_n = saved.size() > req_n ? saved.size() - req_n : 0; // opt params to fill
+    auto mul_n = saved.size() > params_.size() ? saved.size() - params_.size() : 0;
 
     for(auto& el : params_)
     {
-        if(el.opt_ && !opt) continue;
-        opt -= el.opt_;
+        if(el.opt_){ if(opt_n) --opt_n; else continue; }
 
-        do el.values_.add(pop(saved));
-        while(el.mul_ && mul--);
+        if(saved.size())
+        {
+            do el.values_.add(pop(saved));
+            while(el.mul_ && mul_n--);
+        }
+        else throw missing_argument{"param " + q(el.name_) + " is required"};
     }
 
     if(saved.size()) throw invalid_argument{"extra param " + q(saved[0])};
