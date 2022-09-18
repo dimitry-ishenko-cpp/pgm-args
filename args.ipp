@@ -371,6 +371,8 @@ inline string args::usage(string_view program, string_view preamble, string_view
     if(options_.size())
     {
         rows.emplace_back("", "");
+        rows.emplace_back("Options:", "");
+
         for(auto const& el : options_)
         {
             string cell_0;
@@ -411,6 +413,8 @@ inline string args::usage(string_view program, string_view preamble, string_view
     if(params_.size())
     {
         rows.emplace_back("", "");
+        rows.emplace_back("Parameters:", "");
+
         for(auto const& el : params_)
         {
             cell_0_max = std::max(cell_0_max, el.name_.size());
