@@ -3,19 +3,17 @@
 #include <iostream>
 #include <vector>
 
-// 0. Include header.
 #include "pgm/args.hpp"
 
-void show_usage(const pgm::args& args, std::string_view program);
-void show_version(std::string_view program);
+void show_usage(const pgm::args& args, std::string_view name);
+void show_version(std::string_view name);
 
 int main(int argc, char* argv[])
 try
 {
     namespace fs = std::filesystem;
-    std::string program{ fs::path{argv[0]}.filename() };
+    auto name = fs::path{argv[0]}.filename().string();
 
-    // 1 & 2. Define options and positional parameters.
     pgm::args args
     {
         { "-v", "--verbose", pgm::mul,          "increase verbosity" },
@@ -34,26 +32,24 @@ try
         { "DEST",                               "destination file or directory" },
     };
 
-    // 3. Parse command line arguments.
     std::exception_ptr ep;
-    try { args.parse(argc, argv); }
-    catch(...) { ep = std::current_exception(); }
+    try{ args.parse(argc, argv); }
+    catch(...){ ep = std::current_exception(); }
 
-    // 4. Examine options and positional parameters.
     if(args["--help"])
-        show_usage(args, program);
+        show_usage(args, name);
 
     else if(args["--version"])
-        show_version(program);
+        show_version(name);
 
     else if(ep)
         std::rethrow_exception(ep);
 
-    else // process other options
+    else // normal program flow
     {
         auto verbose_level = args["-v"].count();
 
-        auto quiet = !!args["--quiet"];
+        auto quiet = !!args["--quiet"]; // !! to force bool-context
         auto recurse = !!args["-r"];
 
         auto copy_links  = !!args["-l"];
@@ -73,7 +69,7 @@ try
 
         auto dest = args["DEST"].value();
 
-        // do_useful_stuff();
+        // transfer files
     }
 
     return 0;
@@ -84,7 +80,7 @@ catch(const std::exception& e)
     return 1;
 };
 
-void show_usage(const pgm::args& args, std::string_view program)
+void show_usage(const pgm::args& args, std::string_view name)
 {
     auto preamble =
 R"(sync is a dummy file transfer program created solely for demonstrating
@@ -100,10 +96,10 @@ In theory, this would transfer all files matching the pattern *.c from the
 current directory to the directory /dest/path/. However, since this is a dummy
 program, nothing will actually be transferred.)";
 
-    std::cout << args.usage(program, preamble, { }, epilogue) << std::endl;
+    std::cout << args.usage(name, preamble, { }, epilogue) << std::endl;
 }
 
-void show_version(std::string_view program)
+void show_version(std::string_view name)
 {
-    std::cout << program << " 0.42" << std::endl;
+    std::cout << name << " 0.42" << std::endl;
 }
