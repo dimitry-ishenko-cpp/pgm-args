@@ -129,8 +129,8 @@ struct args
 
     void add(arg);
 
-    template<typename... Args>
-    void add(Args&&... args) { add(arg{ std::forward<Args>(args)... }); }
+    template<typename... Ts>
+    void add(Ts&&... vs) { add(arg{ std::forward<Ts>(vs)... }); }
 
     argval const& operator[](string_view) const;
 
