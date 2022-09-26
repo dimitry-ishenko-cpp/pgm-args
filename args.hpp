@@ -52,10 +52,10 @@ private:
 // option or param spec
 enum spec
 {
-    req = 1,    // mandatory option
-    mul = 2,    // option/param can be specified multiple times
+    req    = 1, // mandatory option
+    mul    = 2, // option/param can be specified multiple times
     optval = 4, // option value is optional
-    opt = 8,    // optional param
+    opt    = 8, // optional param
 };
 
 constexpr auto operator|(spec lhs, spec rhs);
