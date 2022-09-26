@@ -126,7 +126,7 @@ hyphen. In the following example:
 foo -a --bar baz -- -c --qux
 ```
 
-`-a` and `--b` are treated as options, and `baz`, `-c` and `--qux` are treated
+`-a` and `--bar` are treated as options, and `baz`, `-c` and `--qux` are treated
 as positional parameters (unless `--bar` requires a value, in which case `baz`
 will be treated as an option value).
 
@@ -149,7 +149,7 @@ header at the beginning of your program:
 
 ### :two: Define Options and Positional Parameters
 
-Options and positional parameters are defined through the **`pgm::arg`** class,
+Options and positional parameters are encapsulated by the **`pgm::arg`** class,
 which has the following constructors:
 
 ```cpp
@@ -221,11 +221,11 @@ pgm::arg{ "-h", "--help",    "Show this help screen and exit." }; // (4)
 pgm::arg{ "-v", "--version", "Show version number and exit."   }; // (4)
 
 pgm::arg{ "source",          "Path to file with source data."  }; // (3)
-pgm::arg{ "foo-bar-baz",     "Lorem ipsum dolor sit amet."     }; // (3)
+pgm::arg{ "foo/bar/baz",     "Lorem ipsum dolor sit amet."     }; // (3)
 ```
 
 :rose: **`spec`** is an option/param specification consisting of one or more of
-the following flags combined with the vertical pipe (`|`) delimiter:
+the following flags combined using the vertical pipe (`|`) delimiter:
 
 | flag              | option             | param              | meaning |
 |:-----------------:|:------------------:|:------------------:|:--------|
@@ -262,7 +262,7 @@ template<typename... Ts>
 void add(Ts&&... values); // emplace-style
 ```
 
-Here are few examples:
+Below are some examples:
 ```cpp
 // construct an instance of pgm::args and add options -v and -h
 pgm::args args
@@ -286,8 +286,8 @@ Invalid and duplicate option/parameter definitions will result in the :poop:
 
 ### :three: Parse the Command Line
 
-Having defined your options and parameters, you can call the `parse()` member
-function of **`pgm::args`** passing it `argc` and `argv` parameters:
+Having defined your options and parameters, you can now call the `parse()`
+member function of **`pgm::args`** passing it `argc` and `argv`:
 
 ```cpp
 int main(int argc, char* argv[])
@@ -298,23 +298,23 @@ int main(int argc, char* argv[])
 }
 ```
 
-The `parse()` function will examine the command line and extract all options and
-their values, as well as the positional parameter values that were passed to the
-program.  This function may throw one of two exceptions:
+The `parse()` function will examine the command line and extract all options,
+their values and positional parameter values that were passed to the program.
+This function may throw one of two exceptions:
 
-* :poop: **`pgm::invalid_argument`** exception will be thrown for any
-  unrecognized or duplicate option (unless marked as `pgm::mul`), or for an
-  extraneous positional parameter.
+* :poop: **`pgm::invalid_argument`** will be thrown for any unrecognized or
+  duplicate option (unless marked as `pgm::mul`), or for an extraneous
+  positional parameter.
 
-* :poop: **`pgm::missing_argument`** exception will be thrown for any missing
-  option marked as `pgm::req`, or for a missing positional parameter _not_ marked
-  as `pgm::opt`.
+* :poop: **`pgm::missing_argument`** will be thrown for any missing option
+  marked as `pgm::req`, or for a missing positional parameter _not_ marked as
+  `pgm::opt`.
 
 ---
 
 ### :four: Examine Options and Positional Parameters
 
-Next, use the subscript `operator["..."]` to examine :eyes: parsed options and
+Next, use the subscript `operator[]` to examine :eyes: parsed options and
 parameters. Options can be referred to by their short name or the long name,
 while positional parameters are referred to by their name.
 
@@ -334,8 +334,8 @@ int main(int argc, char* argv[])
 }
 ```
 
-The subscript `operator[]` returns const ref to an instance of the
-**`pgm::argval`** class with which you can:
+The subscript `operator[]` returns const ref to an instance of
+**`pgm::argval`**, which allows you to:
 
 * :rose: Call the `count()` function to examine how many times said option/param
   was specified on the command line.
@@ -361,13 +361,11 @@ The subscript `operator[]` returns const ref to an instance of the
   auto quiet = static_cast<bool>(args["-q"]);
   // or alternatively
   auto quiet = !!args["-q"];
-  if (quiet) proceed_quietly();
+  if (quiet) festina_lente();
   ```
 
-  If your program has mandatory arguments (ie, required options, or positional
-  parameters _not_ marked as optional), and there are certain "high priority"
-  options, such as `--help`, which you would like to process in all situations,
-  you can do the following:
+  If there are certain "high priority" options, such as `--help`, which you
+  would like to process in all situations, you can do the following:
 
   ```cpp
   std::exception_ptr ep;
@@ -386,8 +384,8 @@ The subscript `operator[]` returns const ref to an instance of the
   option doesn't take values, empty string will be returned.
 
   _NOTE_: This function is equivalent to calling `value(0)` (see below) and will
-  throw the :poop: **`std::out_of_range`** exception, if the option/param was not
-  specified on the command line.
+  throw :poop: **`std::out_of_range`**, if the option/param was not specified on
+  the command line.
 
   Alternatively, you can call `value_or(...)` and specify a default value to be
   returned, when the option/param was _not_ specified.
@@ -414,7 +412,8 @@ The subscript `operator[]` returns const ref to an instance of the
   if (args["--foo"].value(2) == "bar") process_bar();
   ```
 
-  _NOTE_: This function may throw the :poop: **`std::out_of_range`** exception.
+  _NOTE_: This function will throw the :poop: **`std::out_of_range`** exception,
+  if `n` is not valid.
 
 ---
 
@@ -424,20 +423,20 @@ Finally, the **`pgm::args`** class provides the `usage()` member function, which
 displays program details including all options and positional parameters in a
 nicely formatted manner. :notes:
 
-It has this signature:
+It has a signature of:
 
 ```cpp
 std::string usage(program, preamble = "", prologue = "", epilogue = "");
 ```
 
-and returns roughly the following text:
+and returns text in roughly the following format:
 
-```
-<preamble>
+<pre>
+<b>&lt;preamble></b>
 
-Usage: <program> [option...] params...
+Usage: <b>&lt;program></b> [option...] params...
 
-<prologue>
+<b>&lt;prologue></b>
 
 Options:
 ...
@@ -445,12 +444,14 @@ Options:
 Parameters:
 ...
 
-<epilogue>
-```
+<b>&lt;epilogue></b>
+</pre>
 
 `preamble`, `prologue` and `epilogue` are all optional.
 
 ---
+
+### :six: Example
 
 Here is a more complete example of using **pgm::args**:
 
@@ -567,6 +568,7 @@ void show_version(std::string_view name)
 }
 ```
 
+Output:
 ```console
 user@linux:~$ ./example2
 Missing argument: param 'SRC' is required.
