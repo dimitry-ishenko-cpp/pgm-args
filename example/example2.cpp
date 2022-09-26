@@ -69,7 +69,11 @@ try
 
         auto dest = args["DEST"].value();
 
-        // transfer files
+        // "transfer" files
+        for(auto const& source : sources)
+        {
+            if(!quiet) std::cout << "Sending " << source << " to " << dest << std::endl;
+        }
     }
 
     return 0;
