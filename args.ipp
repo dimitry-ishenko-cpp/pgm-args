@@ -191,7 +191,7 @@ inline argval const& args::operator[](string_view name) const
 
         for(auto const& el : params_) if(el.name_ == name) return el.values_;
     }
-    throw invalid_argument{"bad option or param " + q(string{name})};
+    throw invalid_argument{"unrecognized option or param " + q(string{name})};
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -256,7 +256,7 @@ inline void args::parse(int argc, char* argv[])
             auto pred = [&](auto const& el){ return el.short_ == name || el.long_ == name; };
 
             auto it = std::find_if(options_.begin(), options_.end(), pred);
-            if(it == options_.end()) throw invalid_argument{"bad option " + q(name)};
+            if(it == options_.end()) throw invalid_argument{"unrecognized option " + q(name)};
 
             else if(it->valname_.empty()) // doesn't take values
             {
