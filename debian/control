@@ -1,0 +1,17 @@
+Source: libpgm-args-dev
+Section: libdevel
+Priority: optional
+Maintainer: Dimitry Ishenko <dimitry.ishenko@gmail.com>
+Build-Depends: debhelper-compat (= 13)
+Standards-Version: 4.6.0
+Homepage: https://github.com/dimitry-ishenko-cpp/pgm-args
+Vcs-Browser: https://github.com/dimitry-ishenko-cpp/pgm-args
+Vcs-Git: https://github.com/dimitry-ishenko-cpp/pgm-args.git
+Rules-Requires-Root: no
+
+Package: libpgm-args-dev
+Architecture: all
+Depends: ${misc:Depends}
+Description: pgm::args – Define & Process Program Arguments in C++
+ This simple header-only library allows you to easily define, parse and examine
+ program options and positional parameters in a C++ program.

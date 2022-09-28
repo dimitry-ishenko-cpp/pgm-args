@@ -1,0 +1,33 @@
+libpgm-args-dev (0.2) unstable; urgency=medium
+
+  * README.md: update
+  * README.md: add usage examples
+  * arg: add bool conversion operator
+  * Move access functions into arg
+  * arg: privatize member variables
+  * args: cosmetics
+  * args: remove empty lines
+  * Add LICENSE.md and initial bits for README.md
+  * args: refactor
+  * args: operator<< -> add
+  * args: formatting
+  * args: add usage() function
+  * argument_exception: accept two parameters
+  * args: implement parse, refactor
+  * Simplify and refactor
+  * args: add value accessors
+  * Reduce code
+  * arg: tweak
+  * args: move find_option and find_param
+  * Add string alias
+  * arg: add value functions
+  * args: fix duplicate option check
+  * invalid_definition: tweak message
+  * Add bits for args
+  * arg: publicize several properties
+  * arg: poly -> multiple
+  * param + option -> arg
+  * Misc fixes, add exceptions
+  * Add initial bits for option and param
+
+ -- Dimitry Ishenko <dimitry.ishenko@gmail.com>  Wed, 28 Sep 2022 15:51:10 -0400

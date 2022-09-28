@@ -1,0 +1,12 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: pgm-args
+Upstream-Contact: Dimitry Ishenko <dimitry.ishenko@gmail.com>
+Source: https://github.com/dimitry-ishenko-cpp/pgm-args
+
+Files: *
+Copyright: 2018-2022 Dimitry Ishenko <dimitry.ishenko@gmail.com>
+License: GPL-3.0+
+
+Files: debian/*
+Copyright: 2022 Dimitry Ishenko <dimitry.ishenko@gmail.com>
+License: GPL-3.0+
