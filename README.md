@@ -3,7 +3,7 @@
 This simple header-only library allows you to easily define, parse and examine
 program options and positional parameters in a C++ program. :notes:
 
-Here is a super simple example of how to use **pgm::args**:
+Here is a very simple example of how to use **pgm::args**:
 
 ```cpp
 // example1.cpp
@@ -23,7 +23,7 @@ int main(int argc, char* argv[])
 
     if (args["--version"])
     {
-        std::cout << argv[0] << " 0.42" << std::endl;
+        std::cout << argv[0] << " version " << 0.42 << std::endl;
         return 0;
     }
     if (args["--help"])
@@ -52,10 +52,38 @@ Options:
 -h, --help       Show this help screen and exit.
 
 user@linux:~$ ./example1 -v
-./example1 0.42
+./example1 version 0.42
 
 user@linux:~$
 ```
+
+## Installing pgm::args
+
+You can install **`pgm::args`** in one of the following ways:
+
+1. Install binary package, if you are on Debian/Ubuntu/etc:
+
+   ```console
+   $ v=0.2 p=libpgm-args-dev_${v}_all.deb
+   $ wget https://github.com/dimitry-ishenko-cpp/pgm-args/releases/download/v${v}/${p}
+   $ sudo apt install ./${p}
+   ```
+
+2. Install from source:
+
+   ```console
+   $ mkdir build
+   $ cd build
+   $ cmake ..
+   $ make all test
+   $ sudo make install
+   ```
+
+3. Add as a sub-module to your project:
+
+   ```console
+   $ git submodule add https://github.com/dimitry-ishenko-cpp/pgm-args.git pgm
+   ```
 
 ## Using pgm::args
 
@@ -71,7 +99,7 @@ user@linux:~$ foo bar baz
 `foo` is the program, and `bar` and `baz` are the _arguments_. Following rules
 apply to program arguments:
 
-:key: Arguments beginning with the hyphen (`-`) delimiter are called _options_.
+:key: Arguments beginning with the hyphen delimiter `-` are called _options_.
 
 :key: There are two kinds of options:
 
@@ -113,7 +141,7 @@ foo --output=path
 foo --output path
 ```
 
-_NOTE:_ the equal sign (`=`) delimiter between the option and its value.
+Note the equal sign `=` delimiter between the option and its value.
 
 :key: Options typically precede other non-option arguments, which are called
 _positional parameters_.
@@ -127,10 +155,10 @@ foo -a --bar baz -- -c --qux
 ```
 
 `-a` and `--bar` are treated as options, and `baz`, `-c` and `--qux` are treated
-as positional parameters (unless `--bar` requires a value, in which case `baz`
-will be treated as an option value).
+as positional parameters (unless option `--bar` requires a value, in which case
+`baz` will be treated as an option value).
 
-:key: A token consisting of a single hyphen (`-`) is treated as an ordinary
+:key: A token consisting of a single hyphen `-` is treated as an ordinary
 non-option argument.
 
 ---
@@ -172,9 +200,9 @@ followed by one
 character, eg:
 
 ```cpp
-pgm::arg{ "-a",              "..." }; // (1)
-pgm::arg{ "-b",              "..." }; // (1)
-pgm::arg{ "-c",              "..." }; // (1)
+pgm::arg{ "-a", "..." }; // (1)
+pgm::arg{ "-b", "..." }; // (1)
+pgm::arg{ "-c", "..." }; // (1)
 ```
 
 :rose: **`long_name`** is a long option name consisting of two hyphens followed
@@ -194,22 +222,22 @@ pgm::arg{ "-v", "--version", "..." }; // (4)
 [graphic](https://en.cppreference.com/w/cpp/string/byte/isgraph) characters, eg:
 
 ```cpp
-pgm::arg{ "source",          "..." }; // (3)
-pgm::arg{ "x+y",             "..." }; // (3)
-pgm::arg{ "foo/bar/baz",     "..." }; // (3)
+pgm::arg{ "source",      "..." }; // (3)
+pgm::arg{ "x+y",         "..." }; // (3)
+pgm::arg{ "foo/bar/baz", "..." }; // (3)
 ```
 
 :rose: **`value_name`** is an option value name that can contain any
 [graphic](https://en.cppreference.com/w/cpp/string/byte/isgraph) characters, eg:
 
 ```cpp
-pgm::arg{ "-i", "file-name", "..." }; // (5)
-pgm::arg{ "-l", "log-file",  "..." }; // (5)
+pgm::arg{ "-i", "file-name",        "..." }; // (5)
+pgm::arg{ "-l", "log-file",         "..." }; // (5)
 
-pgm::arg{ "--filter", "name", "..." }; // (6)
-pgm::arg{ "--set-time", "HH:MM", "..." }; // (6)
+pgm::arg{ "--filter", "name",       "..." }; // (6)
+pgm::arg{ "--set-time", "HH:MM",    "..." }; // (6)
 
-pgm::arg{ "-w", "--wait", "time", "..." }; // (7)
+pgm::arg{ "-w", "--wait", "time",   "..." }; // (7)
 pgm::arg{ "-d", "--debug", "level", "..." }; // (7)
 ```
 
@@ -225,7 +253,7 @@ pgm::arg{ "foo/bar/baz",     "Lorem ipsum dolor sit amet."     }; // (3)
 ```
 
 :rose: **`spec`** is an option/param specification consisting of one or more of
-the following flags combined using the vertical pipe (`|`) delimiter:
+the following flags combined using the vertical pipe `|` delimiter:
 
 | flag              | option             | param              | meaning |
 |:-----------------:|:------------------:|:------------------:|:--------|
@@ -354,7 +382,7 @@ The subscript `operator[]` returns const ref to an instance of
   ```
 
   `operator bool()` of **`pgm::argval`** is marked as explicit, so you may have
-  to use `static_cast` or double logical negation (`!!`) to force boolean
+  to use `static_cast` or double logical negation `!!` to force boolean
   context in certain situations, eg:
 
   ```cpp
@@ -369,8 +397,8 @@ The subscript `operator[]` returns const ref to an instance of
 
   ```cpp
   std::exception_ptr ep;
-  try{ args.parse(argc, argv); }
-  catch(...){ ep = std::current_exception(); }
+  try { args.parse(argc, argv); }
+  catch (...) { ep = std::current_exception(); }
 
   if (args["--help"]) show_usage();
   else if (ep) std::rethrow_exception(ep);
@@ -467,6 +495,8 @@ Here is a more complete example of using **pgm::args**:
 void show_usage(const pgm::args& args, std::string_view name);
 void show_version(std::string_view name);
 
+void transfer(std::string_view source, std::string_view dest);
+
 int main(int argc, char* argv[])
 try
 {
@@ -492,8 +522,8 @@ try
     };
 
     std::exception_ptr ep;
-    try{ args.parse(argc, argv); }
-    catch(...){ ep = std::current_exception(); }
+    try { args.parse(argc, argv); }
+    catch (...) { ep = std::current_exception(); }
 
     if (args["--help"])
         show_usage(args, name);
@@ -529,9 +559,10 @@ try
         auto dest = args["DEST"].value();
 
         // "transfer" files
-        for(auto const& source : sources)
+        for (auto const& source : sources)
         {
-            if(!quiet) std::cout << "Sending " << source << " to " << dest << std::endl;
+            if (!quiet) std::cout << "Sending " << source << " to " << dest << std::endl;
+            transfer(source, dest);
         }
     }
 
@@ -564,7 +595,12 @@ program, nothing will actually be transferred.)";
 
 void show_version(std::string_view name)
 {
-    std::cout << name << " 0.42" << std::endl;
+    std::cout << name << " version " << 0.42 << std::endl;
+}
+
+void transfer(std::string_view source, std::string_view dest)
+{
+    //
 }
 ```
 
