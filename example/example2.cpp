@@ -8,6 +8,8 @@
 void show_usage(const pgm::args& args, std::string_view name);
 void show_version(std::string_view name);
 
+void transfer(std::string_view source, std::string_view dest);
+
 int main(int argc, char* argv[])
 try
 {
@@ -33,16 +35,16 @@ try
     };
 
     std::exception_ptr ep;
-    try{ args.parse(argc, argv); }
-    catch(...){ ep = std::current_exception(); }
+    try { args.parse(argc, argv); }
+    catch (...) { ep = std::current_exception(); }
 
-    if(args["--help"])
+    if (args["--help"])
         show_usage(args, name);
 
-    else if(args["--version"])
+    else if (args["--version"])
         show_version(name);
 
-    else if(ep)
+    else if (ep)
         std::rethrow_exception(ep);
 
     else // normal program flow
@@ -55,30 +57,31 @@ try
         auto copy_links  = !!args["-l"];
         auto deref_links = !!args["-L"];
 
-        if(copy_links && deref_links) throw pgm::invalid_argument{
+        if (copy_links && deref_links) throw pgm::invalid_argument{
             "options '-l' and '-L' are mutually exclusive"
         };
 
         auto chmod = args["--chmod"].value_or("0644");
 
         std::vector<std::string> rules;
-        for(auto const& rule : args["--filter"].values()) rules.push_back(rule);
+        for (auto const& rule : args["--filter"].values()) rules.push_back(rule);
 
         std::vector<std::string> sources;
-        for(auto const& source : args["SRC"].values()) sources.push_back(source);
+        for (auto const& source : args["SRC"].values()) sources.push_back(source);
 
         auto dest = args["DEST"].value();
 
         // "transfer" files
-        for(auto const& source : sources)
+        for (auto const& source : sources)
         {
-            if(!quiet) std::cout << "Sending " << source << " to " << dest << std::endl;
+            if (!quiet) std::cout << "Sending " << source << " to " << dest << std::endl;
+            transfer(source, dest);
         }
     }
 
     return 0;
 }
-catch(const std::exception& e)
+catch (const std::exception& e)
 {
     std::cerr << e.what() << std::endl;
     return 1;
@@ -106,4 +109,9 @@ program, nothing will actually be transferred.)";
 void show_version(std::string_view name)
 {
     std::cout << name << " 0.42" << std::endl;
+}
+
+void transfer(std::string_view source, std::string_view dest)
+{
+    //
 }
