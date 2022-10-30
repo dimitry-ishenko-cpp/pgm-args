@@ -1,3 +1,59 @@
+libpgm-args-dev (0.3) unstable; urgency=medium
+
+  * example2: formatting, add empty transfer() fn
+  * README.md: add install section
+  * Add debian packaging
+  * Fix install path
+  * Fix tests
+  * README.md: small fixes
+  * CMakeLists.txt: don't build examples by default
+  * README.md: update
+  * example2: "transfer" files
+  * "bad" -> "unrecognized"
+  * args: use Ts/vs instead of Args/args
+  * spec: formatting
+  * example2: update
+  * example1: update
+  * test: use test features and TEST_F mactos
+  * Add example1
+  * args::usage(): indicate options and parameters
+  * CMakeLists.txt: refactor
+  * example/main.cpp -> example2.cpp
+  * example: move help and version into own functions
+  * Add test with no params
+  * args::parse(): simplify param processing
+  * Ignore build files
+  * Update copyright years
+  * example: tweak messages
+  * Add tests for optional and multi-value params
+  * args::parse(): don't pre-check required params
+  * Add example
+  * Add pgm symlink
+  * Add CMakeLists.txt
+  * Relax positional param constraints
+  * Use for-loops for less code
+  * args::operator[]: switch back to string_view
+  * Minor clean-ups
+  * argval: remove size()
+  * Remove find_equal() and has_equal()
+  * Replace option::from() and param::from()
+  * Generalize find_equal() and has_equal() templates
+  * Shorten some error messages
+  * Use q() to quote names
+  * args: formatting
+  * args: take name by const ref
+  * Refactor
+  * arg: remove comments
+  * argval: mark operator bool() const
+  * args: add preamble and prologue
+  * Implement args::usage()
+  * Hid implementation details in args.ipp
+  * Re-write
+  * args: mark usage() as const
+  * Remove std::string alias
+
+ -- Dimitry Ishenko <dimitry.ishenko@gmail.com>  Sun, 30 Oct 2022 12:45:41 -0400
+
 libpgm-args-dev (0.2) unstable; urgency=medium
 
   * README.md: update
