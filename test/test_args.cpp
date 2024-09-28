@@ -10,7 +10,7 @@ struct argcv
     template<typename... Args>
     argcv(Args&&... args) : args_{std::forward<Args>(args)...}
     {
-        for(auto& arg : args_) argcv_.push_back(arg.data());
+        for (auto& arg : args_) argcv_.push_back(arg.data());
         argcv_.push_back(nullptr);
     }
 

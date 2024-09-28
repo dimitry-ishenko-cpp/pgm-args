@@ -21,7 +21,9 @@ namespace pgm
 {
 
 ////////////////////////////////////////////////////////////////////////////////
-// parsed values for an option or positional parameter
+/*! @struct argval
+ *  @brief parsed values for an option or positional parameter
+ */
 struct argval
 {
     auto count() const { return data_.size(); }
@@ -29,9 +31,9 @@ struct argval
 
     explicit operator bool() const { return !empty(); }
 
-    auto const& values() const { return data_; }
-    auto const& value() const { return data_.at(0); }
-    auto const& value(std::size_t n) const { return data_.at(n); }
+    auto& values() const { return data_; }
+    auto& value() const { return data_.at(0); }
+    auto& value(std::size_t n) const { return data_.at(n); }
 
     auto value_or(std::string_view def) const { return empty() ? std::string{def} : value(); }
 
@@ -43,58 +45,66 @@ private:
 };
 
 ////////////////////////////////////////////////////////////////////////////////
-// option or param spec
+/*! @enum spec
+ *  @brief option or param spec
+ */
 enum spec
 {
-    req    = 1, // mandatory option
-    mul    = 2, // option/param can be specified multiple times
-    optval = 4, // option value is optional
-    opt    = 8, // optional param
+    req    = 1, //!< mandatory option
+    mul    = 2, //!< option/param can be specified multiple times
+    optval = 4, //!< option value is optional
+    opt    = 8, //!< optional param
 };
 
 constexpr auto operator|(spec lhs, spec rhs);
 
 ////////////////////////////////////////////////////////////////////////////////
-// program option
+/*! @struct option
+ *  @brief program option
+ */
 struct option
 {
-    std::string short_;       // short option name
-    std::string long_;        // long option name
-    std::string valname_;     // name of the option value; eg, --opt-name=<value>
-    std::string description_; // description
+    std::string short_;       //!< short option name
+    std::string long_;        //!< long option name
+    std::string valname_;     //!< name of the option value; eg, --opt-name=<value>
+    std::string description_; //!< description
 
-    bool req_ = false;        // mandatory (required) option
-    bool mul_ = false;        // can be specified multiple times
-    bool optval_ = false;     // option value is optional
+    bool req_ = false;        //!< mandatory (required) option
+    bool mul_ = false;        //!< can be specified multiple times
+    bool optval_ = false;     //!< option value is optional
 
-    argval values_;           // parsed value(s)
+    argval values_;           //!< parsed value(s)
 };
 
 ////////////////////////////////////////////////////////////////////////////////
-// positional parameter
+/*! @struct param
+ *  @brief positional parameter
+ */
 struct param
 {
-    std::string name_;        // param name
-    std::string description_; // description
+    std::string name_;        //!< param name
+    std::string description_; //!< description
 
-    bool opt_ = false;        // optional param
-    bool mul_ = false;        // can be specified multiple times
+    bool opt_ = false;        //!< optional param
+    bool mul_ = false;        //!< can be specified multiple times
 
-    argval values_;           // parsed value(s)
+    argval values_;           //!< parsed value(s)
 };
 
 ////////////////////////////////////////////////////////////////////////////////
-// program argument (either option or param)
+/*! @struct arg
+ *  @brief program argument (either option or param)
+ */
 struct arg
 {
     arg(std::string name1, std::string description) :
-        arg{std::move(name1), spec{ }, std::move(description)}
+        arg{std::move(name1), spec{}, std::move(description)}
     { }
     arg(std::string name1, std::string name2, std::string description) :
-        arg{std::move(name1), std::move(name2), spec{ }, std::move(description)}
+        arg{std::move(name1), std::move(name2), spec{}, std::move(description)}
     { }
     arg(std::string name1, std::string name2, std::string name3, std::string description) :
-        arg{std::move(name1), std::move(name2), std::move(name3), spec{ }, std::move(description)}
+        arg{std::move(name1), std::move(name2), std::move(name3), spec{}, std::move(description)}
     { }
 
     arg(std::string name1, spec, std::string description);
@@ -112,13 +122,15 @@ private:
 };
 
 ////////////////////////////////////////////////////////////////////////////////
-// program arguments
+/*! @struct args
+ *  @brief program arguments
+ */
 struct args
 {
     args() = default;
     explicit args(std::initializer_list<arg> il)
     {
-        for(auto& el : il) add(std::move(el));
+        for (auto&& el : il) add(std::move(el));
     }
 
     void add(arg);
@@ -129,7 +141,9 @@ struct args
     argval const& operator[](std::string_view) const;
 
     void parse(int argc, char* argv[]);
-    std::string usage(std::string_view program, std::string_view preamble = { }, std::string_view prologue = { }, std::string_view epilogue = { }) const;
+    std::string usage(std::string_view program,
+        std::string_view preamble = {}, std::string_view prologue = {}, std::string_view epilogue = {}
+    ) const;
 
 private:
     std::vector<option> options_;
@@ -143,7 +157,7 @@ private:
 struct argument_exception : std::invalid_argument
 {
     argument_exception(std::string_view what, std::string_view why) :
-        std::invalid_argument{std::string{what}+": "+std::string{why}+"."}
+        std::invalid_argument{std::string{what} + ": " + std::string{why} + "."}
     { }
 };
 
