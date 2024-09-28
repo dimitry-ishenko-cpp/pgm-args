@@ -31,33 +31,31 @@ constexpr auto operator|(spec lhs, spec rhs)
 namespace
 {
 
-using std::begin, std::end, std::size;
-
 //! @brief check if `s` is a valid short option
 constexpr bool is_short_option(std::string_view s)
 {
-    return size(s) == 2 && s[0] == '-' && std::isalnum(s[1]);
+    return s.size() == 2 && s[0] == '-' && std::isalnum(s[1]);
 }
 
 //! @brief check if `s` is a valid long option
 constexpr bool is_long_option(std::string_view s)
 {
-    return size(s) > 2 && s[0] == '-' && s[1] == '-' && s[2] != '-'
-        && std::all_of(begin(s) + 2, end(s), [](char c){ return c == '-' || std::isalnum(c); });
+    return s.size() > 2 && s[0] == '-' && s[1] == '-' && s[2] != '-'
+        && std::all_of(s.begin() + 2, s.end(), [](char c){ return c == '-' || std::isalnum(c); });
 }
 
 //! @brief check if `s` is a valid option value
 constexpr bool is_valname(std::string_view s)
 {
-    return size(s) > 0 && s[0] != '-'
-        && std::all_of(begin(s), end(s), [](char c){ return std::isgraph(c); });
+    return s.size() > 0 && s[0] != '-'
+        && std::all_of(s.begin(), s.end(), [](char c){ return std::isgraph(c); });
 }
 
 //! @brief check if `s` is a valid positional param name
 constexpr bool is_param_name(std::string_view s)
 {
-    return size(s) > 0 && s[0] != '-'
-        && std::all_of(begin(s), end(s), [](char c){ return std::isgraph(c); });
+    return s.size() > 0 && s[0] != '-'
+        && std::all_of(s.begin(), s.end(), [](char c){ return std::isgraph(c); });
 }
 
 ////////////////////////////////////////////////////////////////////////////////
