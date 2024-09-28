@@ -64,9 +64,8 @@ You can install **`pgm::args`** in one of the following ways:
 1. Install binary package, if you are on Debian/Ubuntu/etc:
 
    ```console
-   $ v=0.3 p=libpgm-args-dev_${v}_all.deb
-   $ wget https://github.com/dimitry-ishenko-cpp/pgm-args/releases/download/v${v}/${p}
-   $ sudo apt install ./${p}
+   $ sudo add-apt-repository ppa:ppa-verse/dev
+   $ sudo apt install libpgm-args-dev
    ```
 
 2. Install from source:
