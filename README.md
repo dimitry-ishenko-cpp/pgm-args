@@ -172,6 +172,15 @@ header at the beginning of your program:
 ...
 ```
 
+For [CMake](https://cmake.org/)-based projects you can do the following to find
+the library and link with it:
+
+```cmake
+find_package(pgm_args REQUIRED)
+...
+target_link_libraries(my_project PRIVATE pgm::args)
+```
+
 ---
 
 ### :two: Define Options and Positional Parameters
