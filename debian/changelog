@@ -1,8 +1,16 @@
-pgm-args (1.0) UNRELEASED; urgency=medium
+pgm-args (1.0) unstable; urgency=medium
 
-  * 
+  * CMakeLists: fix test procedure
+  * d/control: drop support for Ubuntu Focal
+  * Don't install the license twice.
+  * d/copyright: clean-up
+  * Update copyright years
+  * README: add CMake mention
+  * README: clean-up
+  * Restructure the project
+  * Prepare for v1.0
 
- -- Dimitry Ishenko <dimitry.ishenko@gmail.com>  Mon, 28 Jul 2025 12:16:31 -0400
+ -- Dimitry Ishenko <dimitry.ishenko@gmail.com>  Mon, 28 Jul 2025 12:42:52 -0400
 
 pgm-args (0.4) unstable; urgency=medium
 
