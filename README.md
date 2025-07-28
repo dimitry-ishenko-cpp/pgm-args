@@ -64,24 +64,24 @@ You can install **`pgm::args`** in one of the following ways:
 1. Install binary package, if you are on Debian/Ubuntu/etc:
 
    ```console
-   $ sudo add-apt-repository ppa:ppa-verse/dev
-   $ sudo apt install libpgm-args-dev
+   sudo add-apt-repository ppa:ppa-verse/dev
+   sudo apt install libpgm-args-dev
    ```
 
 2. Install from source:
 
    ```console
-   $ mkdir build
-   $ cd build
-   $ cmake ..
-   $ make all test
-   $ sudo make install
+   mkdir build
+   cd build
+   cmake ..
+   make all test
+   sudo make install
    ```
 
 3. Add as a sub-module to your project:
 
    ```console
-   $ git submodule add https://github.com/dimitry-ishenko-cpp/pgm-args.git pgm
+   git submodule add https://github.com/dimitry-ishenko-cpp/pgm-args.git pgm
    ```
 
 ## Using pgm::args
@@ -103,11 +103,11 @@ apply to program arguments:
 :key: There are two kinds of options:
 
 * _short options_, consisting of a single hyphen followed by an alpha-numeric
-  character, eg:  
+  character, eg:
   `-a` `-b` `-c`
 
 * _long options_, consisting of two hyphens followed by one or more
-  alpha-numeric characters and hyphens, eg:  
+  alpha-numeric characters and hyphens, eg:
   `--output` `--log-file`
 
 :key: Several short options maybe grouped in one token:
@@ -261,8 +261,8 @@ the following flags combined using the vertical pipe `|` delimiter:
 | **`pgm::optval`** | :heavy_check_mark: |                    | option **val**ue is **opt**ional (ie, can be omitted) |
 | **`pgm::opt`**    |                    | :heavy_check_mark: | positional parameter is **opt**ional<sup>3</sup>  |
 
-<sup>1</sup> Options are optional by default.  
-<sup>2</sup> There can be at most one positional parameter marked with `pgm::mul`.  
+<sup>1</sup> Options are optional by default.
+<sup>2</sup> There can be at most one positional parameter marked with `pgm::mul`.
 <sup>3</sup> Parameters are mandatory by default.
 
 Invalid flags (such as, specifying `pgm::optval` for a positional parameter) are
