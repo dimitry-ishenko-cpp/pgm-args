@@ -178,7 +178,7 @@ inline void args::add_param(param new_)
 
     for (auto&& el : params_)
         if (new_.mul_ && el.mul_)
-            throw invalid_argument{"more than one multi-value param " + q(new_.name_)};
+            throw invalid_definition{"more than one multi-value param " + q(new_.name_)};
 
     params_.push_back(std::move(new_));
 }
