@@ -42,13 +42,7 @@ constexpr bool is_long_option(std::string_view s)
         && std::all_of(s.begin() + 2, s.end(), [](char c){ return c == '-' || std::isalnum(c); });
 }
 
-constexpr bool is_valname(std::string_view s)
-{
-    return s.size() > 0 && s[0] != '-'
-        && std::all_of(s.begin(), s.end(), [](char c){ return std::isgraph(c); });
-}
-
-constexpr bool is_param_name(std::string_view s)
+constexpr bool is_name(std::string_view s)
 {
     return s.size() > 0 && s[0] != '-'
         && std::all_of(s.begin(), s.end(), [](char c){ return std::isgraph(c); });
@@ -81,7 +75,7 @@ inline arg::arg(std::string s, pgm::spec spec, std::string description)
     else if (is_long_option(s))
         val_ = make_option({}, std::move(s), {}, spec, std::move(description));
 
-    else if (is_param_name(s))
+    else if (is_name(s))
         val_ = make_param(std::move(s), spec, std::move(description));
 
     else throw invalid_definition{"bad option or param name '" + s + "'"};
@@ -95,14 +89,14 @@ inline arg::arg(std::string s1, std::string s2, pgm::spec spec, std::string desc
         if (is_long_option(s2))
             val_ = make_option(std::move(s1), std::move(s2), {}, spec, std::move(description));
 
-        else if (is_valname(s2))
+        else if (is_name(s2))
             val_ = make_option(std::move(s1), {}, std::move(s2), spec, std::move(description));
 
         else throw invalid_definition{"bad long option or option value name '" + s2 + "'"};
     }
     else if (is_long_option(s1))
     {
-        if (is_valname(s2))
+        if (is_name(s2))
             val_ = make_option({}, std::move(s1), std::move(s2), spec, std::move(description));
 
         else throw invalid_definition{"bad option value name '" + s2 + "'"};
@@ -119,7 +113,7 @@ inline arg::arg(std::string s1, std::string s2, std::string s3, pgm::spec spec, 
     else if (!is_long_option(s2))
         throw invalid_definition{"bad long option name '" + s2 + "'"};
 
-    else if (!is_valname(s3))
+    else if (!is_name(s3))
         throw invalid_definition{"bad option value name '" + s3 + "'"};
 
     else val_ = make_option(std::move(s1), std::move(s2), std::move(s3), spec, std::move(description));
