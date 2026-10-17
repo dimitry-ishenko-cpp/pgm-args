@@ -11,6 +11,7 @@
 #include <stdexcept>
 #include <string>
 #include <string_view>
+#include <utility>
 #include <variant>
 #include <vector>
 
@@ -36,7 +37,7 @@ struct argval
 private:
     std::vector<std::string> data_;
 
-    friend class args;
+    friend struct args;
     void add(std::string val) { data_.push_back(std::move(val)); }
 };
 
@@ -118,7 +119,7 @@ private:
 struct args
 {
     args() = default;
-    explicit args(std::initializer_list<arg> il) { for (auto&& el : il) add(std::move(el)); }
+    explicit args(std::initializer_list<arg> il) { for (auto&& v : il) add(v); }
 
     void add(arg);
     void add(auto&&... args) { add(arg{ std::forward<decltype (args)>(args)... }); }

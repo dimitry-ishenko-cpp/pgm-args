@@ -49,18 +49,13 @@ constexpr bool is_not_option(std::string_view s) { return s.empty() || s == "-" 
 ////////////////////////////////////////////////////////////////////////////////
 inline auto make_option(std::string s1, std::string s2, std::string s3, pgm::spec spec, std::string description)
 {
-    return option{
-        std::move(s1), std::move(s2), std::move(s3), std::move(description),
-        !!(spec & req), !!(spec & mul), !!(spec & optval),
+    return option{ std::move(s1), std::move(s2), std::move(s3), std::move(description),
+        !!(spec & req), !!(spec & mul), !!(spec & optval), {}
     };
 }
 
-inline auto make_param(std::string s, pgm::spec spec, std::string description)
-{
-    return param{
-        std::move(s), std::move(description),
-        !!(spec & opt), !!(spec & mul),
-    };
+inline auto make_param(std::string s, pgm::spec spec, std::string description) {
+    return param{ std::move(s), std::move(description), !!(spec & opt), !!(spec & mul), {} };
 }
 
 inline auto pop(std::deque<std::string>& q)
