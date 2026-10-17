@@ -182,64 +182,63 @@ inline void args::parse(int argc, char* argv[])
     std::deque<std::string> args;
     for (auto n = 1; n < argc; ++n) args.emplace_back(argv[n]);
 
-    bool had_token = false;
-    std::deque<std::string> saved;
+    bool had_token = false; // end-of-options token ("--")
+    std::deque<std::string> store; // for params
 
     while (args.size())
     {
         auto arg = pop(args);
 
-        if (had_token || is_not_option(arg)) // param ("", "-" or "[^-].+")
-            saved.push_back(std::move(arg)); // process afterwards
+        if (had_token || is_not_option(arg)) // either "" or "-" or "[^-].+"
+            store.push_back(std::move(arg));
 
         else if (arg == "--") // end-of-options token
             had_token = true;
 
-        else // option ("-.+")
+        else // an option ("-.+")
         {
             std::string name;
             std::optional<std::string> value;
 
             if (arg[1] == '-') // long option ("--.+")
             {
-                auto p = arg.find('=', 2);
-                if (p != arg.npos) // with value ("--[^=]+=.?")
+                if (auto p = arg.find('=', 2); p != arg.npos) // ...with value ("--[^=]+=.?")
                 {
                     name = arg.substr(0, p);
                     value = arg.substr(p + 1);
                 }
-                else name = arg; // without value ("--[^=]+")
+                else name = arg; // ...without value ("--[^=]+")
             }
             else // short option (-[^-].?)
             {
                 name = arg.substr(0, 2);
-                if (arg.size() > 2) value = arg.substr(2); // with value ("-[^-].+")
+                if (arg.size() > 2) value = arg.substr(2); // ...with value ("-[^-].+")
             }
 
             // find matching definition
-            auto it = ranges::find_if(options_,
-                [&](auto&& el){ return el.short_ == name || el.long_ == name; }
+            auto match = ranges::find_if(options_,
+                [&](auto&& o){ return name == o.short_ || name == o.long_; }
             );
-            if (it == options_.end())
+            if (match == options_.end())
                 throw invalid_argument{"unrecognized option '" + name + "'"};
 
-            else if (it->valname_.empty()) // doesn't take values
+            else if (match->valname_.empty()) // doesn't take values
             {
-                if (value) // but we have one
+                if (value) // ...but we have one
                 {
                     if (name.size() == 2) // short option
                     {
-                        // maybe this is a group of short options (eg, -abc)
-                        // push them in front of the queue
+                        // this might be a group of short options (eg, -abc),
+                        // push the rest back into the queue
                         args.push_front("-" + *value);
                     }
                     else throw invalid_argument{"'" + name + "' doesn't take values"};
                 }
                 value = ""; // indicate presence
             }
-            else if (it->optval_) // optional value
+            else if (match->optval_) // value is optional
             {
-                if (!value) // and we don't have one
+                if (!value) // ...and we don't have one
                 {
                     // take the next arg, if it's not an option
                     if (args.size() && is_not_option(args[0]))
@@ -249,47 +248,57 @@ inline void args::parse(int argc, char* argv[])
             }
             else // requires a value
             {
-                if (!value) // but we don't have one
+                if (!value) // ...but we don't have one
                 {
-                    // take the next arg unless it's "--"
+                    // take the next arg unless it's the end-of-options token
                     if (args.size() && args[0] != "--")
                         value = pop(args);
                     else throw missing_argument{"'" + name + "' requires a value"};
                 }
             }
 
-            if (!it->mul_ && !it->values_.empty())
+            if (!match->mul_ && !match->values_.empty())
                 throw invalid_argument{"duplicate option '" + name + "'"};
 
-            it->values_.add(std::move(*value));
+            match->values_.add(std::move(*value));
         }
     }
 
     // check required options
-    for (auto&& el : options_)
-        if (el.req_ && el.values_.empty()) throw missing_argument{
-            "option '" + (
-                el.short_.empty() ? el.long_ : el.long_.empty() ? el.short_ : el.short_ + ", " + el.long_
-            ) + "' is required"
-        };
-
-    // process params
-    auto req_n = ranges::count(params_, false, &param::opt_); // # of required params to fill
-
-    for (auto it = params_.begin(), end = params_.end(); it != end; ++it)
-    {
-        if (!it->opt_) --req_n;
-        else if (saved.size() <= req_n) continue; // not enough for optional params
-
-        if (saved.size())
+    for (auto&& o : options_)
+        if (o.req_ && o.values_.empty())
         {
-            do it->values_.add(pop(saved));
-            while (it->mul_ && saved.size() >= end - it); // munch extra values
+            auto name = o.short_.empty() ? o.long_
+                : o.long_.empty() ? o.short_
+                : o.short_ + ", " + o.long_;
+            throw missing_argument{"option '" + name + "' is required"};
         }
-        else throw missing_argument{"param '" + it->name_ + "' is required"};
+
+    // # of non-opt params to fill
+    auto need = static_cast<std::size_t>( ranges::count(params_, false, &param::opt_) );
+
+    auto remain = params_.size();
+    for (auto&& p : params_)
+    {
+        --remain;
+
+        if (p.opt_)
+        {
+            // can we spare a value for this param?
+            if (!(store.size() > need)) continue;
+        }
+        else --need;
+
+        if (store.size())
+        {
+            // munch as many values as we can
+            do p.values_.add(pop(store));
+            while (p.mul_ && store.size() > remain);
+        }
+        else throw missing_argument{"param '" + p.name_ + "' is required"};
     }
 
-    if (saved.size()) throw invalid_argument{"extra param '" + saved[0] + "'"};
+    if (store.size()) throw invalid_argument{"extra param '" + store[0] + "'"};
 }
 
 ////////////////////////////////////////////////////////////////////////////////
