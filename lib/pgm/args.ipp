@@ -31,6 +31,8 @@ constexpr auto operator|(spec lhs, spec rhs)
 namespace
 {
 
+namespace ranges = std::ranges;
+
 constexpr bool is_short_option(std::string_view s)
 {
     return s.size() == 2 && s[0] == '-' && std::isalnum(s[1]);
@@ -39,13 +41,13 @@ constexpr bool is_short_option(std::string_view s)
 constexpr bool is_long_option(std::string_view s)
 {
     return s.size() > 2 && s[0] == '-' && s[1] == '-' && s[2] != '-'
-        && std::all_of(s.begin() + 2, s.end(), [](char c){ return c == '-' || std::isalnum(c); });
+        && ranges::all_of(s.substr(2), [](char c){ return c == '-' || std::isalnum(c); });
 }
 
 constexpr bool is_name(std::string_view s)
 {
     return s.size() > 0 && s[0] != '-'
-        && std::all_of(s.begin(), s.end(), [](char c){ return std::isgraph(c); });
+        && ranges::all_of(s, [](char c){ return std::isgraph(c); });
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -120,49 +122,41 @@ inline arg::arg(std::string s1, std::string s2, std::string s3, pgm::spec spec, 
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-inline void args::add(pgm::arg arg)
+inline void args::add(arg new_)
 {
-    if (arg.is_option())
-        add_option(std::move(arg.to_option()));
+    if (new_.is_option())
+        add_option(std::move(new_.to_option()));
 
-    else if (arg.is_param())
-        add_param(std::move(arg.to_param()));
+    else if (new_.is_param())
+        add_param(std::move(new_.to_param()));
 
     else throw invalid_definition{"neither option nor param"};
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-inline void args::add_option(pgm::option option)
+inline void args::add_option(option new_)
 {
-    if (!option.short_.empty())
-    {
-        for (auto&& el : options_)
-            if (el.short_ == option.short_)
-                throw invalid_definition{"duplicate option '" + option.short_ + "'"};
-    }
+    if (!new_.short_.empty()
+        && ranges::find(options_, new_.short_, &option::short_) != options_.end())
+            throw invalid_definition{"duplicate option '" + new_.short_ + "'"};
 
-    if (!option.long_.empty())
-    {
-        for (auto&& el : options_)
-            if (el.long_ == option.long_)
-                throw invalid_definition{"duplicate option '" + option.long_ + "'"};
-    }
+    if (!new_.long_.empty()
+        && ranges::find(options_, new_.long_, &option::long_) != options_.end())
+            throw invalid_definition{"duplicate option '" + new_.long_ + "'"};
 
-    options_.push_back(std::move(option));
+    options_.push_back(std::move(new_));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-inline void args::add_param(pgm::param param)
+inline void args::add_param(param new_)
 {
-    for (auto&& el : params_)
-        if (el.name_ == param.name_)
-            throw invalid_definition{"duplicate param '" + param.name_ + "'"};
+    if (ranges::find(params_, new_.name_, &param::name_) != params_.end())
+        throw invalid_definition{"duplicate param '" + new_.name_ + "'"};
 
-    for (auto&& el : params_)
-        if (param.mul_ && el.mul_)
-            throw invalid_definition{"more than one multi-value param '" + param.name_ + "'"};
+    if (new_.mul_ && ranges::any_of(params_, &param::mul_))
+        throw invalid_definition{"more than one multi-value param '" + new_.name_ + "'"};
 
-    params_.push_back(std::move(param));
+    params_.push_back(std::move(new_));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -189,10 +183,7 @@ inline auto pop(std::deque<std::string>& q)
     return el;
 }
 
-inline bool is_not_option(std::string_view s)
-{
-    return s.empty() || s == "-" || s[0] != '-';
-}
+inline bool is_not_option(std::string_view s) { return s.empty() || s == "-" || s[0] != '-'; }
 
 }
 
@@ -237,9 +228,9 @@ inline void args::parse(int argc, char* argv[])
             }
 
             // find matching definition
-            auto pred = [&](auto&& el){ return el.short_ == name || el.long_ == name; };
-
-            auto it = std::find_if(options_.begin(), options_.end(), pred);
+            auto it = ranges::find_if(options_,
+                [&](auto&& el){ return el.short_ == name || el.long_ == name; }
+            );
             if (it == options_.end())
                 throw invalid_argument{"unrecognized option '" + name + "'"};
 
@@ -294,9 +285,7 @@ inline void args::parse(int argc, char* argv[])
         };
 
     // process params
-    auto req_n = std::count_if(params_.begin(), params_.end(),
-        [&](auto&& el){ return !el.opt_; }
-    ); // # of required params to fill
+    auto req_n = ranges::count(params_, false, &param::opt_); // # of required params to fill
 
     for (auto it = params_.begin(), end = params_.end(); it != end; ++it)
     {
@@ -318,7 +307,7 @@ inline void args::parse(int argc, char* argv[])
 inline std::string args::usage(std::string_view program, std::string_view preamble,
     std::string_view prologue, std::string_view epilogue) const
 {
-    std::string short_fill = std::any_of(options_.begin(), options_.end(),
+    std::string short_fill = ranges::any_of(options_,
         [](auto&& el){ return el.short_.size(); }
     ) ? "    " : ""; // filler for "-o, "
 
