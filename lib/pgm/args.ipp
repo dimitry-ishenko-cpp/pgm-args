@@ -10,7 +10,6 @@
 #include "args.hpp"
 
 #include <algorithm>
-#include <cctype> // std::isalnum, std::isgraph
 #include <deque>
 #include <iomanip>
 #include <optional>
@@ -22,33 +21,30 @@ namespace pgm
 {
 
 ////////////////////////////////////////////////////////////////////////////////
-constexpr auto operator|(spec lhs, spec rhs)
-{
-    return static_cast<spec>(static_cast<int>(lhs) | static_cast<int>(rhs));
-}
-
-////////////////////////////////////////////////////////////////////////////////
 namespace
 {
 
 namespace ranges = std::ranges;
 
-constexpr bool is_short_option(std::string_view s)
-{
-    return s.size() == 2 && s[0] == '-' && std::isalnum(s[1]);
+constexpr bool is_alnum(char c) {
+    return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
+}
+constexpr bool is_dash_alnum(char c) { return c == '-' || is_alnum(c); }
+constexpr bool is_graph(char c) { return c >= '!' && c <= '~'; }
+
+constexpr bool is_short_option(std::string_view s) {
+    return s.size() == 2 && s[0] == '-' && is_alnum(s[1]);
 }
 
-constexpr bool is_long_option(std::string_view s)
-{
-    return s.size() > 2 && s[0] == '-' && s[1] == '-' && s[2] != '-'
-        && ranges::all_of(s.substr(2), [](char c){ return c == '-' || std::isalnum(c); });
+constexpr bool is_long_option(std::string_view s) {
+    return s.size() > 2 && s[0] == '-' && s[1] == '-' && s[2] != '-' && ranges::all_of(s, is_dash_alnum);
 }
 
-constexpr bool is_name(std::string_view s)
-{
-    return s.size() > 0 && s[0] != '-'
-        && ranges::all_of(s, [](char c){ return std::isgraph(c); });
+constexpr bool is_name(std::string_view s) {
+    return s.size() > 0 && s[0] != '-' && ranges::all_of(s, is_graph);
 }
+
+constexpr bool is_not_option(std::string_view s) { return s.empty() || s == "-" || s[0] != '-'; }
 
 ////////////////////////////////////////////////////////////////////////////////
 inline auto make_option(std::string s1, std::string s2, std::string s3, pgm::spec spec, std::string description)
@@ -61,9 +57,17 @@ inline auto make_option(std::string s1, std::string s2, std::string s3, pgm::spe
 
 inline auto make_param(std::string s, pgm::spec spec, std::string description)
 {
-    return param{ std::move(s), std::move(description),
+    return param{
+        std::move(s), std::move(description),
         !!(spec & opt), !!(spec & mul),
     };
+}
+
+inline auto pop(std::deque<std::string>& q)
+{
+    auto el = std::move(q.front());
+    q.pop_front();
+    return el;
 }
 
 }
@@ -170,21 +174,6 @@ inline argval const& args::operator[](std::string_view name) const
         for (auto&& el : params_) if (el.name_ == name) return el.values_;
     }
     throw invalid_argument{"unrecognized option or param '" + std::string{name} + "'"};
-}
-
-////////////////////////////////////////////////////////////////////////////////
-namespace
-{
-
-inline auto pop(std::deque<std::string>& q)
-{
-    auto el = std::move(q.front());
-    q.pop_front();
-    return el;
-}
-
-inline bool is_not_option(std::string_view s) { return s.empty() || s == "-" || s[0] != '-'; }
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////

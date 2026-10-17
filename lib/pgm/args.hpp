@@ -50,7 +50,9 @@ enum spec
     opt    = 8, // optional param
 };
 
-constexpr auto operator|(spec lhs, spec rhs);
+constexpr auto operator|(spec lhs, spec rhs) {
+    return static_cast<spec>(static_cast<int>(lhs) | static_cast<int>(rhs));
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 struct option
