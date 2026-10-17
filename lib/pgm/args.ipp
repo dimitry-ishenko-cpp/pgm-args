@@ -32,15 +32,15 @@ constexpr bool is_alnum(char c) {
 constexpr bool is_dash_alnum(char c) { return c == '-' || is_alnum(c); }
 constexpr bool is_graph(char c) { return c >= '!' && c <= '~'; }
 
-constexpr bool is_short_option(std::string_view s) {
+constexpr bool is_valid_short_option(std::string_view s) {
     return s.size() == 2 && s[0] == '-' && is_alnum(s[1]);
 }
 
-constexpr bool is_long_option(std::string_view s) {
+constexpr bool is_valid_long_option(std::string_view s) {
     return s.size() > 2 && s[0] == '-' && s[1] == '-' && s[2] != '-' && ranges::all_of(s, is_dash_alnum);
 }
 
-constexpr bool is_name(std::string_view s) {
+constexpr bool is_valid_name(std::string_view s) {
     return s.size() > 0 && s[0] != '-' && ranges::all_of(s, is_graph);
 }
 
@@ -75,13 +75,13 @@ inline auto pop(std::deque<std::string>& q)
 ////////////////////////////////////////////////////////////////////////////////
 inline arg::arg(std::string s, pgm::spec spec, std::string description)
 {
-    if (is_short_option(s))
+    if (is_valid_short_option(s))
         val_ = make_option(std::move(s), {}, {}, spec, std::move(description));
 
-    else if (is_long_option(s))
+    else if (is_valid_long_option(s))
         val_ = make_option({}, std::move(s), {}, spec, std::move(description));
 
-    else if (is_name(s))
+    else if (is_valid_name(s))
         val_ = make_param(std::move(s), spec, std::move(description));
 
     else throw invalid_definition{"bad option or param name '" + s + "'"};
@@ -90,19 +90,19 @@ inline arg::arg(std::string s, pgm::spec spec, std::string description)
 ////////////////////////////////////////////////////////////////////////////////
 inline arg::arg(std::string s1, std::string s2, pgm::spec spec, std::string description)
 {
-    if (is_short_option(s1))
+    if (is_valid_short_option(s1))
     {
-        if (is_long_option(s2))
+        if (is_valid_long_option(s2))
             val_ = make_option(std::move(s1), std::move(s2), {}, spec, std::move(description));
 
-        else if (is_name(s2))
+        else if (is_valid_name(s2))
             val_ = make_option(std::move(s1), {}, std::move(s2), spec, std::move(description));
 
         else throw invalid_definition{"bad long option or option value name '" + s2 + "'"};
     }
-    else if (is_long_option(s1))
+    else if (is_valid_long_option(s1))
     {
-        if (is_name(s2))
+        if (is_valid_name(s2))
             val_ = make_option({}, std::move(s1), std::move(s2), spec, std::move(description));
 
         else throw invalid_definition{"bad option value name '" + s2 + "'"};
@@ -113,13 +113,13 @@ inline arg::arg(std::string s1, std::string s2, pgm::spec spec, std::string desc
 ////////////////////////////////////////////////////////////////////////////////
 inline arg::arg(std::string s1, std::string s2, std::string s3, pgm::spec spec, std::string description)
 {
-    if (!is_short_option(s1))
+    if (!is_valid_short_option(s1))
         throw invalid_definition{"bad short option name '" + s1 + "'"};
 
-    else if (!is_long_option(s2))
+    else if (!is_valid_long_option(s2))
         throw invalid_definition{"bad long option name '" + s2 + "'"};
 
-    else if (!is_name(s3))
+    else if (!is_valid_name(s3))
         throw invalid_definition{"bad option value name '" + s3 + "'"};
 
     else val_ = make_option(std::move(s1), std::move(s2), std::move(s3), spec, std::move(description));
