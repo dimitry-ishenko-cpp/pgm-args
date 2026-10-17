@@ -5,10 +5,10 @@
 // Distributed under the GNU GPL license. See the LICENSE.md file for details.
 
 ////////////////////////////////////////////////////////////////////////////////
-#ifndef PGM_ARGS_IPP
-#define PGM_ARGS_IPP
+#pragma once
 
-////////////////////////////////////////////////////////////////////////////////
+#include "args.hpp"
+
 #include <algorithm>
 #include <cctype> // std::isalnum, std::isgraph
 #include <deque>
@@ -31,27 +31,23 @@ constexpr auto operator|(spec lhs, spec rhs)
 namespace
 {
 
-//! @brief check if `s` is a valid short option
 constexpr bool is_short_option(std::string_view s)
 {
     return s.size() == 2 && s[0] == '-' && std::isalnum(s[1]);
 }
 
-//! @brief check if `s` is a valid long option
 constexpr bool is_long_option(std::string_view s)
 {
     return s.size() > 2 && s[0] == '-' && s[1] == '-' && s[2] != '-'
         && std::all_of(s.begin() + 2, s.end(), [](char c){ return c == '-' || std::isalnum(c); });
 }
 
-//! @brief check if `s` is a valid option value
 constexpr bool is_valname(std::string_view s)
 {
     return s.size() > 0 && s[0] != '-'
         && std::all_of(s.begin(), s.end(), [](char c){ return std::isgraph(c); });
 }
 
-//! @brief check if `s` is a valid positional param name
 constexpr bool is_param_name(std::string_view s)
 {
     return s.size() > 0 && s[0] != '-'
@@ -59,128 +55,120 @@ constexpr bool is_param_name(std::string_view s)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-inline auto make_option(std::string short_, std::string long_, std::string valname, spec spc, std::string description)
+inline auto make_option(std::string s1, std::string s2, std::string s3, pgm::spec spec, std::string description)
 {
     return option{
-        std::move(short_), std::move(long_), std::move(valname), std::move(description),
-        static_cast<bool>(spc & req),
-        static_cast<bool>(spc & mul),
-        static_cast<bool>(spc & optval),
+        std::move(s1), std::move(s2), std::move(s3), std::move(description),
+        !!(spec & req), !!(spec & mul), !!(spec & optval),
     };
 }
 
-////////////////////////////////////////////////////////////////////////////////
-inline auto make_param(std::string name, spec spc, std::string description)
+inline auto make_param(std::string s, pgm::spec spec, std::string description)
 {
-    return param{
-        std::move(name), std::move(description),
-        static_cast<bool>(spc & opt),
-        static_cast<bool>(spc & mul),
+    return param{ std::move(s), std::move(description),
+        !!(spec & opt), !!(spec & mul),
     };
 }
 
-//! @brief return quoted `name`
-inline auto q(const std::string& name) { return "'" + name + "'"; }
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-inline arg::arg(std::string name1, spec spc, std::string description)
+inline arg::arg(std::string s, pgm::spec spec, std::string description)
 {
-    if (is_short_option(name1))
-        val_ = make_option(std::move(name1), {}, {}, spc, std::move(description));
+    if (is_short_option(s))
+        val_ = make_option(std::move(s), {}, {}, spec, std::move(description));
 
-    else if (is_long_option(name1))
-        val_ = make_option({}, std::move(name1), {}, spc, std::move(description));
+    else if (is_long_option(s))
+        val_ = make_option({}, std::move(s), {}, spec, std::move(description));
 
-    else if (is_param_name(name1))
-        val_ = make_param(std::move(name1), spc, std::move(description));
+    else if (is_param_name(s))
+        val_ = make_param(std::move(s), spec, std::move(description));
 
-    else throw invalid_definition{"bad option or param name " + q(name1)};
+    else throw invalid_definition{"bad option or param name '" + s + "'"};
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-inline arg::arg(std::string name1, std::string name2, spec spc, std::string description)
+inline arg::arg(std::string s1, std::string s2, pgm::spec spec, std::string description)
 {
-    if (is_short_option(name1))
+    if (is_short_option(s1))
     {
-        if (is_long_option(name2))
-            val_ = make_option(std::move(name1), std::move(name2), {}, spc, std::move(description));
+        if (is_long_option(s2))
+            val_ = make_option(std::move(s1), std::move(s2), {}, spec, std::move(description));
 
-        else if (is_valname(name2))
-            val_ = make_option(std::move(name1), {}, std::move(name2), spc, std::move(description));
+        else if (is_valname(s2))
+            val_ = make_option(std::move(s1), {}, std::move(s2), spec, std::move(description));
 
-        else throw invalid_definition{"bad long option or option value name " + q(name2)};
+        else throw invalid_definition{"bad long option or option value name '" + s2 + "'"};
     }
-    else if (is_long_option(name1))
+    else if (is_long_option(s1))
     {
-        if (is_valname(name2))
-            val_ = make_option({}, std::move(name1), std::move(name2), spc, std::move(description));
+        if (is_valname(s2))
+            val_ = make_option({}, std::move(s1), std::move(s2), spec, std::move(description));
 
-        else throw invalid_definition{"bad option value name " + q(name2)};
+        else throw invalid_definition{"bad option value name '" + s2 + "'"};
     }
-    else throw invalid_definition{"bad short or long option name " + q(name1)};
+    else throw invalid_definition{"bad short or long option name '" + s1 + "'"};
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-inline arg::arg(std::string name1, std::string name2, std::string name3, spec spc, std::string description)
+inline arg::arg(std::string s1, std::string s2, std::string s3, pgm::spec spec, std::string description)
 {
-    if (!is_short_option(name1))
-        throw invalid_definition{"bad short option name " + q(name1)};
+    if (!is_short_option(s1))
+        throw invalid_definition{"bad short option name '" + s1 + "'"};
 
-    else if (!is_long_option(name2))
-        throw invalid_definition{"bad long option name " + q(name2)};
+    else if (!is_long_option(s2))
+        throw invalid_definition{"bad long option name '" + s2 + "'"};
 
-    else if (!is_valname(name3))
-        throw invalid_definition{"bad option value name " + q(name3)};
+    else if (!is_valname(s3))
+        throw invalid_definition{"bad option value name '" + s3 + "'"};
 
-    else val_ = make_option(std::move(name1), std::move(name2), std::move(name3), spc, std::move(description));
+    else val_ = make_option(std::move(s1), std::move(s2), std::move(s3), spec, std::move(description));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-inline void args::add(arg new_)
+inline void args::add(pgm::arg arg)
 {
-    if (new_.is_option())
-        add_option(std::move(new_.to_option()));
+    if (arg.is_option())
+        add_option(std::move(arg.to_option()));
 
-    else if (new_.is_param())
-        add_param(std::move(new_.to_param()));
+    else if (arg.is_param())
+        add_param(std::move(arg.to_param()));
 
     else throw invalid_definition{"neither option nor param"};
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-inline void args::add_option(option new_)
+inline void args::add_option(pgm::option option)
 {
-    if (new_.short_.size())
+    if (!option.short_.empty())
     {
         for (auto&& el : options_)
-            if (el.short_ == new_.short_)
-                throw invalid_definition{"duplicate option " + q(new_.short_)};
+            if (el.short_ == option.short_)
+                throw invalid_definition{"duplicate option '" + option.short_ + "'"};
     }
 
-    if (new_.long_.size())
+    if (!option.long_.empty())
     {
         for (auto&& el : options_)
-            if (el.long_ == new_.long_)
-                throw invalid_definition{"duplicate option " + q(new_.long_)};
+            if (el.long_ == option.long_)
+                throw invalid_definition{"duplicate option '" + option.long_ + "'"};
     }
 
-    options_.push_back(std::move(new_));
+    options_.push_back(std::move(option));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-inline void args::add_param(param new_)
+inline void args::add_param(pgm::param param)
 {
     for (auto&& el : params_)
-        if (el.name_ == new_.name_)
-            throw invalid_definition{"duplicate param " + q(new_.name_)};
+        if (el.name_ == param.name_)
+            throw invalid_definition{"duplicate param '" + param.name_ + "'"};
 
     for (auto&& el : params_)
-        if (new_.mul_ && el.mul_)
-            throw invalid_definition{"more than one multi-value param " + q(new_.name_)};
+        if (param.mul_ && el.mul_)
+            throw invalid_definition{"more than one multi-value param '" + param.name_ + "'"};
 
-    params_.push_back(std::move(new_));
+    params_.push_back(std::move(param));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -193,7 +181,7 @@ inline argval const& args::operator[](std::string_view name) const
 
         for (auto&& el : params_) if (el.name_ == name) return el.values_;
     }
-    throw invalid_argument{"unrecognized option or param " + q(std::string{name})};
+    throw invalid_argument{"unrecognized option or param '" + std::string{name} + "'"};
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -227,39 +215,39 @@ inline void args::parse(int argc, char* argv[])
     {
         auto arg = pop(args);
 
-        if (had_token || is_not_option(arg)) // param ("", "-" or re: "[^-].+")
-            saved.push_back(std::move(arg)); // process at the end
+        if (had_token || is_not_option(arg)) // param ("", "-" or "[^-].+")
+            saved.push_back(std::move(arg)); // process afterwards
 
         else if (arg == "--") // end-of-options token
             had_token = true;
 
-        else // option (re: "-.+")
+        else // option ("-.+")
         {
             std::string name;
             std::optional<std::string> value;
 
-            if (arg[1] == '-') // long option (re: "--.+")
+            if (arg[1] == '-') // long option ("--.+")
             {
                 auto p = arg.find('=', 2);
-                if (p != std::string::npos) // with value (re: "--[^=]+=.?")
+                if (p != arg.npos) // with value ("--[^=]+=.?")
                 {
                     name = arg.substr(0, p);
                     value = arg.substr(p + 1);
                 }
-                else name = arg; // without value (re: "--[^=]+")
+                else name = arg; // without value ("--[^=]+")
             }
-            else // short option (re: -[^-].?)
+            else // short option (-[^-].?)
             {
                 name = arg.substr(0, 2);
-                if (arg.size() > 2) value = arg.substr(2); // with value (re: "-[^-].+")
+                if (arg.size() > 2) value = arg.substr(2); // with value ("-[^-].+")
             }
 
             // find matching definition
-            auto pred = [&](auto const& el){ return el.short_ == name || el.long_ == name; };
+            auto pred = [&](auto&& el){ return el.short_ == name || el.long_ == name; };
 
             auto it = std::find_if(options_.begin(), options_.end(), pred);
             if (it == options_.end())
-                throw invalid_argument{"unrecognized option " + q(name)};
+                throw invalid_argument{"unrecognized option '" + name + "'"};
 
             else if (it->valname_.empty()) // doesn't take values
             {
@@ -267,11 +255,11 @@ inline void args::parse(int argc, char* argv[])
                 {
                     if (name.size() == 2) // short option
                     {
-                        // maybe this is a group of short options? (eg, -abc)
-                        // push them to the front of the queue
+                        // maybe this is a group of short options (eg, -abc)
+                        // push them in front of the queue
                         args.push_front("-" + *value);
                     }
-                    else throw invalid_argument{q(name) + " doesn't take values"};
+                    else throw invalid_argument{"'" + name + "' doesn't take values"};
                 }
                 value = ""; // indicate presence
             }
@@ -285,19 +273,19 @@ inline void args::parse(int argc, char* argv[])
                     else value = ""; // or indicate presence
                 }
             }
-            else // requires value
+            else // requires a value
             {
                 if (!value) // but we don't have one
                 {
                     // take the next arg unless it's "--"
                     if (args.size() && args[0] != "--")
                         value = pop(args);
-                    else throw missing_argument{q(name) + " requires a value"};
+                    else throw missing_argument{"'" + name + "' requires a value"};
                 }
             }
 
             if (!it->mul_ && !it->values_.empty())
-                throw invalid_argument{"duplicate option " + q(name)};
+                throw invalid_argument{"duplicate option '" + name + "'"};
 
             it->values_.add(std::move(*value));
         }
@@ -306,32 +294,35 @@ inline void args::parse(int argc, char* argv[])
     // check required options
     for (auto&& el : options_)
         if (el.req_ && el.values_.empty()) throw missing_argument{
-            "option " + q(el.short_.empty() ? el.long_ : el.long_.empty() ? el.short_ : el.short_+", "+el.long_) + " is required"
+            "option '" + (
+                el.short_.empty() ? el.long_ : el.long_.empty() ? el.short_ : el.short_ + ", " + el.long_
+            ) + "' is required"
         };
 
     // process params
     auto req_n = std::count_if(params_.begin(), params_.end(),
-        [&](auto const& el){ return !el.opt_; }
-    ); // # of non-opt params to fill
+        [&](auto&& el){ return !el.opt_; }
+    ); // # of required params to fill
 
     for (auto it = params_.begin(), end = params_.end(); it != end; ++it)
     {
         if (!it->opt_) --req_n;
-        else if (saved.size() <= req_n) continue; // not enough for opt params
+        else if (saved.size() <= req_n) continue; // not enough for optional params
 
         if (saved.size())
         {
             do it->values_.add(pop(saved));
             while (it->mul_ && saved.size() >= end - it); // munch extra values
         }
-        else throw missing_argument{"param " + q(it->name_) + " is required"};
+        else throw missing_argument{"param '" + it->name_ + "' is required"};
     }
 
-    if (saved.size()) throw invalid_argument{"extra param " + q(saved[0])};
+    if (saved.size()) throw invalid_argument{"extra param '" + saved[0] + "'"};
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-inline std::string args::usage(std::string_view program, std::string_view preamble, std::string_view prologue, std::string_view epilogue) const
+inline std::string args::usage(std::string_view program, std::string_view preamble,
+    std::string_view prologue, std::string_view epilogue) const
 {
     std::string short_fill = std::any_of(options_.begin(), options_.end(),
         [](auto&& el){ return el.short_.size(); }
@@ -457,6 +448,3 @@ inline std::string args::usage(std::string_view program, std::string_view preamb
 
 ////////////////////////////////////////////////////////////////////////////////
 }
-
-////////////////////////////////////////////////////////////////////////////////
-#endif

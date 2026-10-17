@@ -5,10 +5,8 @@
 // Distributed under the GNU GPL license. See the LICENSE.md file for details.
 
 ////////////////////////////////////////////////////////////////////////////////
-#ifndef PGM_ARGS_HPP
-#define PGM_ARGS_HPP
+#pragma once
 
-////////////////////////////////////////////////////////////////////////////////
 #include <initializer_list>
 #include <stdexcept>
 #include <string>
@@ -21,9 +19,7 @@ namespace pgm
 {
 
 ////////////////////////////////////////////////////////////////////////////////
-/*! @struct argval
- *  @brief parsed values for an option or positional parameter
- */
+// option/param values
 struct argval
 {
     auto count() const { return data_.size(); }
@@ -45,71 +41,66 @@ private:
 };
 
 ////////////////////////////////////////////////////////////////////////////////
-/*! @enum spec
- *  @brief option or param spec
- */
+// option/param spec
 enum spec
 {
-    req    = 1, //!< mandatory option
-    mul    = 2, //!< option/param can be specified multiple times
-    optval = 4, //!< option value is optional
-    opt    = 8, //!< optional param
+    req    = 1, // required option
+    mul    = 2, // option/param can be specified multiple times
+    optval = 4, // option value is optional
+    opt    = 8, // optional param
 };
 
 constexpr auto operator|(spec lhs, spec rhs);
 
 ////////////////////////////////////////////////////////////////////////////////
-/*! @struct option
- *  @brief program option
- */
 struct option
 {
-    std::string short_;       //!< short option name
-    std::string long_;        //!< long option name
-    std::string valname_;     //!< name of the option value; eg, --opt-name=<value>
-    std::string description_; //!< description
+    std::string short_;       // short option name
+    std::string long_;        // long option name
+    std::string valname_;     // name of the option value; eg, --opt-name=<value>
+    std::string description_; // description
 
-    bool req_ = false;        //!< mandatory (required) option
-    bool mul_ = false;        //!< can be specified multiple times
-    bool optval_ = false;     //!< option value is optional
+    bool req_ = false;        // required option
+    bool mul_ = false;        // can be specified multiple times
+    bool optval_ = false;     // option value is optional
 
-    argval values_;           //!< parsed value(s)
+    argval values_;           // parsed option values
 };
 
 ////////////////////////////////////////////////////////////////////////////////
-/*! @struct param
- *  @brief positional parameter
- */
 struct param
 {
-    std::string name_;        //!< param name
-    std::string description_; //!< description
+    std::string name_;        // param name
+    std::string description_; // description
 
-    bool opt_ = false;        //!< optional param
-    bool mul_ = false;        //!< can be specified multiple times
+    bool opt_ = false;        // optional param
+    bool mul_ = false;        // can be specified multiple times
 
-    argval values_;           //!< parsed value(s)
+    argval values_;           // parsed param values
 };
 
 ////////////////////////////////////////////////////////////////////////////////
-/*! @struct arg
- *  @brief program argument (either option or param)
- */
 struct arg
 {
-    arg(std::string name1, std::string description) :
-        arg{std::move(name1), spec{}, std::move(description)}
+    // `s` can be a short option name, a long option name or a param name
+    arg(std::string s, std::string description) :
+        arg{std::move(s), spec{}, std::move(description)}
     { }
-    arg(std::string name1, std::string name2, std::string description) :
-        arg{std::move(name1), std::move(name2), spec{}, std::move(description)}
-    { }
-    arg(std::string name1, std::string name2, std::string name3, std::string description) :
-        arg{std::move(name1), std::move(name2), std::move(name3), spec{}, std::move(description)}
-    { }
+    arg(std::string s, spec, std::string description);
 
-    arg(std::string name1, spec, std::string description);
-    arg(std::string name1, std::string name2, spec, std::string description);
-    arg(std::string name1, std::string name2, std::string name3, spec, std::string description);
+    // `s1` can be either a short option name or a long option name
+    // if `s1` is a short option name, `s2` can be a long option name or an option value name
+    // if `s1` is a long  option name, `s2` is an option value name
+    arg(std::string s1, std::string s2, std::string description) :
+        arg{std::move(s1), std::move(s2), spec{}, std::move(description)}
+    { }
+    arg(std::string s1, std::string s2, spec, std::string description);
+
+    // `s1` is a short option name, `s2` is a long option name and `s3` is an option value name
+    arg(std::string s1, std::string s2, std::string s3, std::string description) :
+        arg{std::move(s1), std::move(s2), std::move(s3), spec{}, std::move(description)}
+    { }
+    arg(std::string s1, std::string s2, std::string s3, spec, std::string description);
 
     auto is_option() const { return std::holds_alternative<option>(val_); }
     auto is_param() const { return std::holds_alternative<param>(val_); }
@@ -122,28 +113,20 @@ private:
 };
 
 ////////////////////////////////////////////////////////////////////////////////
-/*! @struct args
- *  @brief program arguments
- */
 struct args
 {
     args() = default;
-    explicit args(std::initializer_list<arg> il)
-    {
-        for (auto&& el : il) add(std::move(el));
-    }
+    explicit args(std::initializer_list<arg> il) { for (auto&& el : il) add(std::move(el)); }
 
     void add(arg);
-
-    template<typename... Ts>
-    void add(Ts&&... vs) { add(arg{ std::forward<Ts>(vs)... }); }
+    void add(auto&&... args) { add(arg{ std::forward<decltype (args)>(args)... }); }
 
     argval const& operator[](std::string_view) const;
 
     void parse(int argc, char* argv[]);
-    std::string usage(std::string_view program,
-        std::string_view preamble = {}, std::string_view prologue = {}, std::string_view epilogue = {}
-    ) const;
+
+    std::string usage(std::string_view program, std::string_view preamble = {},
+        std::string_view prologue = {}, std::string_view epilogue = {}) const;
 
 private:
     std::vector<option> options_;
@@ -186,6 +169,3 @@ struct missing_argument : argument_exception
 }
 
 #include "args.ipp"
-
-////////////////////////////////////////////////////////////////////////////////
-#endif
