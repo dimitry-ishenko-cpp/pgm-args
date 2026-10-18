@@ -421,17 +421,25 @@ The subscript `operator[]` returns const ref to an instance of
 * :rose: Call the `value()` function to access the option/param value. If the
   option doesn't take values, empty string will be returned.
 
-  _NOTE_: This function is equivalent to calling `value(0)` (see below) and will
-  throw :poop: **`std::out_of_range`**, if the option/param was not specified on
-  the command line.
-
-  Alternatively, you can call `value_or(...)` and specify a default value to be
-  returned, when the option/param was _not_ specified.
+  To access n-th value of a multi-value (ie, marked with `pgm::mul`)
+  option/param, call `value(n)`. The `value()` function is equivalent to
+  `value(0)`.
 
   ```cpp
   auto conf = args["--conf"].value(); // may throw
-  // or with default value
+  if (args["--foo"].value(2) == "bar") process_bar();
+  ```
+
+  _NOTE_: These functions will throw :poop: **`std::out_of_range`**, if the
+  option/param was not specified on the command line, or if `n` is not valid.
+
+  Alternatively, you can call `value_or(val)` or `value_or(n, val)` and provide
+  a default value to be returned, when the option/param was _not_ specified or
+  has fewer than `n + 1` values.
+
+  ```cpp
   auto conf = args["--conf"].value_or("/etc");
+  auto barf = args["--bar"].value_or(2, "baz");
   ```
 
 * :rose: Call the `values()` function to get all values of a multi-value (ie,
@@ -443,15 +451,48 @@ The subscript `operator[]` returns const ref to an instance of
       do_stuff_with(dir);
   }
   ```
-* :rose: Call the `value(n)` function to access n-th value of a multi-value
-  option/param.
+
+* :rose: The `value()` and `values()` functions support basic conversion into
+  numeric types, as well as `bool` (from case-insensitive `true`/`false`,
+  `yes`/`no`, `on`/`off` or `1`/`0`).
 
   ```cpp
-  if (args["--foo"].value(2) == "bar") process_bar();
+  auto threads = args["--threads"].value<int>();
+  auto depth = args["--dim"].value<double>(2); // 3rd dimension
+
+  auto widths = args["--width"].values<std::size_t>(); // std::vector<std::size_t>
   ```
 
-  _NOTE_: This function will throw the :poop: **`std::out_of_range`** exception,
-  if `n` is not valid.
+  The `value_or(...)` function supports conversion as well, with the type
+  deduced from the default value.
+
+  ```cpp
+  auto ratio = args["--ratio"].value_or(3, 2.75); // 4th ratio as double
+
+  args.add_option("--sync", "sync", "Sync before exit (default: off).");
+  auto sync = args["--sync"].value_or(false); // bool
+  ```
+
+  If a value cannot be converted, :poop: **`pgm::invalid_argument`** is thrown.
+  This includes numbers that are out of range. Note that `value_or(...)` only
+  returns the default when the value is _missing_ – a value that is present but
+  malformed still throws.
+
+  You can also add support for your own types by specializing `pgm::convert`.
+
+  ```cpp
+  enum class color { red, blue };
+
+  template<>
+  inline color pgm::convert<color>(std::string_view s)
+  {
+      if (s ==  "red") return color::red;
+      if (s == "blue") return color::blue;
+      throw pgm::invalid_argument{"invalid color '" + std::string{s} + "'"};
+  }
+
+  auto c = args["--color"].value_or(color::red);
+  ```
 
 ---
 
