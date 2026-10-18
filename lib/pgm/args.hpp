@@ -19,6 +19,8 @@
 namespace pgm
 {
 
+template<typename V> V convert(std::string_view);
+
 ////////////////////////////////////////////////////////////////////////////////
 // option/param values
 struct argval
@@ -28,11 +30,16 @@ struct argval
 
     explicit operator bool() const { return !empty(); }
 
-    auto& values() const { return data_; }
-    auto& value() const { return data_.at(0); }
-    auto& value(std::size_t n) const { return data_.at(n); }
+    template<typename V = std::string>
+    decltype(auto) value(std::size_t n = 0) const;
 
-    auto value_or(std::string_view def) const { return empty() ? std::string{def} : value(); }
+    template<typename V>
+    auto value_or(std::size_t n, V def) const;
+    template<typename V>
+    auto value_or(V def) const { return value_or(0, std::move(def)); }
+
+    template<typename V = std::string>
+    decltype(auto) values() const;
 
 private:
     std::vector<std::string> data_;

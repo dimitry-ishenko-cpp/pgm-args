@@ -10,11 +10,14 @@
 #include "args.hpp"
 
 #include <algorithm>
+#include <charconv> // std::from_chars
 #include <deque>
 #include <iomanip>
 #include <optional>
+#include <ranges>
 #include <sstream>
 #include <tuple>
+#include <type_traits>
 
 ////////////////////////////////////////////////////////////////////////////////
 namespace pgm
@@ -25,6 +28,12 @@ namespace
 {
 
 namespace ranges = std::ranges;
+
+constexpr bool iequals(std::string_view l, std::string_view r)
+{
+    auto lower = [](char c) { return c >= 'A' && c <= 'Z' ? char(c - 'A' + 'a') : c; };
+    return ranges::equal(l, r, {}, lower, lower);
+}
 
 constexpr bool is_alnum(char c) {
     return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
@@ -65,6 +74,67 @@ inline auto pop(std::deque<std::string>& q)
     return el;
 }
 
+}
+
+////////////////////////////////////////////////////////////////////////////////
+template<typename V>
+V convert(std::string_view s)
+{
+    static_assert(std::is_arithmetic_v<V>, "Unsupported value type");
+
+    if constexpr (std::is_same_v<V, bool>)
+    {
+        if (iequals(s,  "true") || iequals(s, "yes") || iequals(s,  "on") || s == "1") return true;
+        if (iequals(s, "false") || iequals(s,  "no") || iequals(s, "off") || s == "0") return false;
+
+        throw invalid_argument{"invalid boolean value '" + std::string{s} + "'"};
+    }
+    else
+    {
+        auto digits = s;
+        if (digits.starts_with('+') && !digits.starts_with("+-")) digits.remove_prefix(1);
+
+        V val;
+        auto [end, ec] = std::from_chars(digits.data(), digits.data() + digits.size(), val);
+        if (ec == std::errc{} && end == digits.data() + digits.size()) return val;
+
+        auto msg = "invalid value '" + std::string{s} + "'";
+        if (ec == std::errc::result_out_of_range) msg += " - out of range";
+        throw invalid_argument{msg};
+    }
+}
+
+template<typename V>
+decltype(auto) argval::value(std::size_t n) const
+{
+    using U = std::remove_cvref_t<V>;
+
+    if constexpr (std::is_same_v<U, std::string>)
+        return data_.at(n); // const std::string&
+    else return convert<U>(data_.at(n));
+}
+
+template<typename V>
+auto argval::value_or(std::size_t n, V def) const
+{
+    using U = std::remove_cvref_t<V>;
+
+    if constexpr (std::is_convertible_v<U, std::string_view>)
+        return n < count() ? data_[n] : std::string{std::move(def)};
+    else return n < count() ? convert<U>(data_[n]) : def;
+}
+
+template<typename V>
+decltype(auto) argval::values() const
+{
+    using U = std::remove_cvref_t<V>;
+
+    if constexpr (!std::is_same_v<U, std::string>)
+    {
+        auto view = data_ | std::views::transform(convert<U>);
+        return std::vector<U>(view.begin(), view.end());
+    }
+    else return (data_); // const std::vector<std::string>&
 }
 
 ////////////////////////////////////////////////////////////////////////////////
