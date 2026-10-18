@@ -61,10 +61,12 @@ user@linux:~$
 
 You can install **`pgm::args`** in one of the following ways:
 
-1. Install binary package, if you are on Debian/Ubuntu/etc:
+1. Binary packages for Debian, Ubuntu, RaspberryPi and other Debian-based
+   distributions can be installed from the [CCCP Linux Package
+   Archive](https://github.com/cccp-linux/archive). Follow their instructions
+   to set up the archive, and then:
 
    ```console
-   sudo add-apt-repository ppa:ppa-verse/dev
    sudo apt install libpgm-args-dev
    ```
 
