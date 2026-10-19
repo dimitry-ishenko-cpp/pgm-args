@@ -1,25 +1,41 @@
 ////////////////////////////////////////////////////////////////////////////////
 #include "pgm/args.hpp"
 
+#include <deque>
+#include <initializer_list>
 #include <gtest/gtest.h>
 #include <string>
+#include <string_view>
 #include <vector>
 
-struct argcv
+class environment
 {
-    template<typename... Args>
-    argcv(Args&&... args) : args_{std::forward<Args>(args)...}
+    std::deque<std::string> args_;
+    std::vector<char*> argv_{ nullptr };
+
+public:
+    int argc = 0;
+    char** argv = argv_.data();
+
+    environment(std::initializer_list<std::string_view> args) { for (auto&& arg : args) add_arg(arg); }
+
+    void add_arg(std::string_view arg)
     {
-        for (auto& arg : args_) argcv_.push_back(arg.data());
-        argcv_.push_back(nullptr);
+        args_.emplace_back(arg);
+        argv_.back() = args_.back().data();
+        argv_.push_back(nullptr);
+
+        argc = args_.size();
+        argv = argv_.data();
     }
 
-    auto argc() { return argcv_.size() - 1; }
-    auto argv() { return argcv_.data(); }
+    void add_arg(std::string_view name, std::string_view value) {
+        add_arg(name); add_arg(value);
+    }
 
-private:
-    std::vector<std::string> args_;
-    std::vector<char*> argcv_;
+    void add_arg_multi(std::string_view name, std::initializer_list<std::string_view> values) {
+        for (auto value : values) add_arg(name, value);
+    }
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -37,27 +53,27 @@ struct params_0 : testing::Test
 
 TEST_F(params_0, not_enough_0)
 {
-    auto p = argcv{"pgm"};
-    EXPECT_THROW({ args.parse(p.argc(), p.argv()); }, pgm::missing_argument);
+    environment env{ "pgm" };
+    EXPECT_THROW({ args.parse(env.argc, env.argv); }, pgm::missing_argument);
 }
 
 TEST_F(params_0, not_enough_1)
 {
-    auto p = argcv{"pgm", "p1"};
-    EXPECT_THROW({ args.parse(p.argc(), p.argv()); }, pgm::missing_argument);
+    environment env{ "pgm", "p1" };
+    EXPECT_THROW({ args.parse(env.argc, env.argv); }, pgm::missing_argument);
 }
 
 TEST_F(params_0, not_enough_2)
 {
-    auto p = argcv{"pgm", "p1", "p3"};
-    EXPECT_THROW({ args.parse(p.argc(), p.argv()); }, pgm::missing_argument);
+    environment env{ "pgm", "p1", "p3" };
+    EXPECT_THROW({ args.parse(env.argc, env.argv); }, pgm::missing_argument);
 }
 
 TEST_F(params_0, req_only)
 {
-    auto p = argcv{"pgm", "p1", "p3", "p5"};
+    environment env{ "pgm", "p1", "p3", "p5" };
+    EXPECT_NO_THROW({ args.parse(env.argc, env.argv); });
 
-    EXPECT_NO_THROW({ args.parse(p.argc(), p.argv()); });
     EXPECT_EQ  (args["p1"].value(), "p1");
     EXPECT_TRUE(args["p2"].empty());
     EXPECT_EQ  (args["p3"].value(), "p3");
@@ -67,9 +83,9 @@ TEST_F(params_0, req_only)
 
 TEST_F(params_0, opt_1)
 {
-    auto p = argcv{"pgm", "p1", "p2", "p3", "p5"};
+    environment env{ "pgm", "p1", "p2", "p3", "p5" };
+    EXPECT_NO_THROW({ args.parse(env.argc, env.argv); });
 
-    EXPECT_NO_THROW({ args.parse(p.argc(), p.argv()); });
     EXPECT_EQ  (args["p1"].value(), "p1");
     EXPECT_EQ  (args["p2"].value(), "p2");
     EXPECT_EQ  (args["p3"].value(), "p3");
@@ -79,9 +95,9 @@ TEST_F(params_0, opt_1)
 
 TEST_F(params_0, all)
 {
-    auto p = argcv{"pgm", "p1", "p2", "p3", "p4", "p5"};
+    environment env{ "pgm", "p1", "p2", "p3", "p4", "p5" };
+    EXPECT_NO_THROW({ args.parse(env.argc, env.argv); });
 
-    EXPECT_NO_THROW({ args.parse(p.argc(), p.argv()); });
     EXPECT_EQ(args["p1"].value(), "p1");
     EXPECT_EQ(args["p2"].value(), "p2");
     EXPECT_EQ(args["p3"].value(), "p3");
@@ -104,21 +120,21 @@ struct params_1 : public testing::Test
 
 TEST_F(params_1, not_enough_0)
 {
-    auto p = argcv{"pgm"};
-    EXPECT_THROW({ args.parse(p.argc(), p.argv()); }, pgm::missing_argument);
+    environment env{ "pgm" };
+    EXPECT_THROW({ args.parse(env.argc, env.argv); }, pgm::missing_argument);
 }
 
 TEST_F(params_1, not_enough_1)
 {
-    auto p = argcv{"pgm", "p2"};
-    EXPECT_THROW({ args.parse(p.argc(), p.argv()); }, pgm::missing_argument);
+    environment env{ "pgm", "p2" };
+    EXPECT_THROW({ args.parse(env.argc, env.argv); }, pgm::missing_argument);
 }
 
 TEST_F(params_1, req_only)
 {
-    auto p = argcv{"pgm", "p2", "p4"};
+    environment env{ "pgm", "p2", "p4" };
+    EXPECT_NO_THROW({ args.parse(env.argc, env.argv); });
 
-    EXPECT_NO_THROW({ args.parse(p.argc(), p.argv()); });
     EXPECT_TRUE(args["p1"].empty());
     EXPECT_EQ  (args["p2"].value(), "p2");
     EXPECT_TRUE(args["p3"].empty());
@@ -128,9 +144,9 @@ TEST_F(params_1, req_only)
 
 TEST_F(params_1, opt_1)
 {
-    auto p = argcv{"pgm", "p1", "p2", "p4"};
+    environment env{ "pgm", "p1", "p2", "p4" };
+    EXPECT_NO_THROW({ args.parse(env.argc, env.argv); });
 
-    EXPECT_NO_THROW({ args.parse(p.argc(), p.argv()); });
     EXPECT_EQ  (args["p1"].value(), "p1");
     EXPECT_EQ  (args["p2"].value(), "p2");
     EXPECT_TRUE(args["p3"].empty());
@@ -140,9 +156,9 @@ TEST_F(params_1, opt_1)
 
 TEST_F(params_1, opt_2)
 {
-    auto p = argcv{"pgm", "p1", "p2", "p3", "p4"};
+    environment env{ "pgm", "p1", "p2", "p3", "p4" };
+    EXPECT_NO_THROW({ args.parse(env.argc, env.argv); });
 
-    EXPECT_NO_THROW({ args.parse(p.argc(), p.argv()); });
     EXPECT_EQ  (args["p1"].value(), "p1");
     EXPECT_EQ  (args["p2"].value(), "p2");
     EXPECT_EQ  (args["p3"].value(), "p3");
@@ -152,9 +168,9 @@ TEST_F(params_1, opt_2)
 
 TEST_F(params_1, all)
 {
-    auto p = argcv{"pgm", "p1", "p2", "p3", "p4", "p5"};
+    environment env{ "pgm", "p1", "p2", "p3", "p4", "p5" };
+    EXPECT_NO_THROW({ args.parse(env.argc, env.argv); });
 
-    EXPECT_NO_THROW({ args.parse(p.argc(), p.argv()); });
     EXPECT_EQ(args["p1"].value(), "p1");
     EXPECT_EQ(args["p2"].value(), "p2");
     EXPECT_EQ(args["p3"].value(), "p3");
@@ -164,9 +180,9 @@ TEST_F(params_1, all)
 
 TEST_F(params_1, mul_1)
 {
-    auto p = argcv{"pgm", "p1.0", "p1.1", "p2", "p3", "p4", "p5"};
+    environment env{ "pgm", "p1.0", "p1.1", "p2", "p3", "p4", "p5" };
+    EXPECT_NO_THROW({ args.parse(env.argc, env.argv); });
 
-    EXPECT_NO_THROW({ args.parse(p.argc(), p.argv()); });
     EXPECT_EQ(args["p1"].count( ), 2);
     EXPECT_EQ(args["p1"].value(0), "p1.0");
     EXPECT_EQ(args["p1"].value(1), "p1.1");
@@ -178,9 +194,9 @@ TEST_F(params_1, mul_1)
 
 TEST_F(params_1, mul_3)
 {
-    auto p = argcv{"pgm", "p1.0", "p1.1", "p1.2", "p1.3", "p2", "p3", "p4", "p5"};
+    environment env{ "pgm", "p1.0", "p1.1", "p1.2", "p1.3", "p2", "p3", "p4", "p5" };
+    EXPECT_NO_THROW({ args.parse(env.argc, env.argv); });
 
-    EXPECT_NO_THROW({ args.parse(p.argc(), p.argv()); });
     EXPECT_EQ(args["p1"].count( ), 4);
     EXPECT_EQ(args["p1"].value(0), "p1.0");
     EXPECT_EQ(args["p1"].value(1), "p1.1");
