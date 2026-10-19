@@ -453,8 +453,8 @@ The subscript `operator[]` returns const ref to an instance of
   ```
 
 * :rose: The `value()` and `values()` functions support basic conversion into
-  numeric types, as well as `bool` (from case-insensitive `true`/`false`,
-  `yes`/`no`, `on`/`off` or `1`/`0`).
+  numeric types, as well as `bool` (accepts case-insensitive `true`/`false`,
+  `yes`/`no`, `on`/`off` and `1`/`0`).
 
   ```cpp
   auto threads = args["--threads"].value<int>();
@@ -473,10 +473,10 @@ The subscript `operator[]` returns const ref to an instance of
   auto sync = args["--sync"].value_or(false); // bool
   ```
 
-  If a value cannot be converted, :poop: **`pgm::invalid_argument`** is thrown.
-  This includes numbers that are out of range. Note that `value_or(...)` only
-  returns the default when the value is _missing_ – a value that is present but
-  malformed still throws.
+  If a value cannot be converted, these functions will throw :poop:
+  **`pgm::invalid_argument`**. This includes numbers that are out of range.
+  Note that `value_or(...)` only returns the default when the value is
+  _missing_ – a value that is present but malformed still throws.
 
   You can also add support for your own types by specializing `pgm::convert`.
 
