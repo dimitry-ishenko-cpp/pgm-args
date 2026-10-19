@@ -45,6 +45,7 @@ private:
     std::vector<std::string> data_;
 
     friend struct args;
+    void clear() { data_.clear(); }
     void add(std::string val) { data_.push_back(std::move(val)); }
 };
 

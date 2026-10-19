@@ -244,6 +244,9 @@ inline argval const& args::operator[](std::string_view name) const
 ////////////////////////////////////////////////////////////////////////////////
 inline void args::parse(int argc, char* argv[])
 {
+    for (auto& o : options_) o.values_.clear();
+    for (auto& p : params_)  p.values_.clear();
+
     std::deque<std::string> args;
     for (auto n = 1; n < argc; ++n) args.emplace_back(argv[n]);
 
