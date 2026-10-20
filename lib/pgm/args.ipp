@@ -12,11 +12,11 @@
 #include <algorithm>
 #include <charconv> // std::from_chars
 #include <deque>
-#include <iomanip>
+#include <format>
 #include <optional>
 #include <ranges>
-#include <sstream>
 #include <tuple>
+#include <vector>
 #include <type_traits>
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -373,11 +373,7 @@ inline void args::parse(int argc, char* argv[])
 inline std::string args::usage(std::string_view program, std::string_view preamble,
     std::string_view prologue, std::string_view epilogue) const
 {
-    std::string short_fill = ranges::any_of(options_,
-        [](auto&& el){ return el.short_.size(); }
-    ) ? "    " : ""; // filler for "-o, "
-
-    std::size_t cell_0_max = 0;
+    std::size_t width0 = 0;
     std::vector<std::tuple<std::string, std::string>> rows;
 
     ////////////////////
@@ -388,20 +384,14 @@ inline std::string args::usage(std::string_view program, std::string_view preamb
     }
 
     ////////////////////
-    auto cell_0 = "Usage: " + std::string{program};
-
-    if (options_.size()) cell_0 += " [option]...";
-    if (params_.size())
+    auto col0 = "Usage: " + std::string(program);
+    if (options_.size()) col0 += " [option]...";
+    for (auto&& p : params_)
     {
-        for (auto&& el : params_)
-        {
-            if (el.opt_) cell_0 += " [" + el.name_ + "]";
-            else cell_0 += " <" + el.name_ + ">";
-
-            if (el.mul_) cell_0 += "...";
-        }
+        col0 += (p.opt_ ? " [" : " <") + p.name_ + (p.opt_ ? "]" : ">");
+        if (p.mul_) col0 += "...";
     }
-    rows.emplace_back(std::move(cell_0), "");
+    rows.emplace_back(std::move(col0), "");
 
     ////////////////////
     if (prologue.size())
@@ -416,39 +406,41 @@ inline std::string args::usage(std::string_view program, std::string_view preamb
         rows.emplace_back("", "");
         rows.emplace_back("Options:", "");
 
-        for (auto&& el : options_)
+        bool fill = ranges::any_of(options_, [](auto&& s){ return s.size(); }, &option::short_);
+        for (auto&& o : options_)
         {
-            std::string cell_0;
-            if (el.short_.size())
+            std::string col0;
+            if (o.short_.size())
             {
-                cell_0 += el.short_; // "-o"
-                if (el.long_.size())
+                col0 += o.short_;                              // "-o"
+                if (o.long_.size())
                 {
-                    cell_0 += ", " + el.long_; // "-o, --opt-name"
-                    if (el.valname_.size()) cell_0 += "="; // "-o, --opt-name="
+                    col0 += ", " + o.long_;                    // "-o, --opt"
+                    if (o.valname_.size()) col0 += "=";        // "-o, --opt="
                 }
-                else if (el.valname_.size()) cell_0 += " "; // "-o "
+                else if (o.valname_.size()) col0 += " ";       // "-o "
             }
             else
             {
-                cell_0 += short_fill + el.long_; // "    --opt-name"
-                if (el.valname_.size()) cell_0 += "="; // "    --opt-name="
+                col0 += (fill ? "    " : "") + o.long_;        // "    --opt"
+                if (o.valname_.size()) col0 += "=";            // "    --opt="
             }
 
-            if (el.valname_.size())
+            if (!o.valname_.empty())
             {
-                if (el.optval_) cell_0 += "[" + el.valname_ + "]"; // "...[val]"
-                else cell_0 += "<" + el.valname_ + ">"; // "...<val>"
+                if (o.optval_) col0 += "[" + o.valname_ + "]"; // ...[val]
+                else           col0 += "<" + o.valname_ + ">"; // ...<val>
             }
 
-            cell_0_max = std::max(cell_0_max, cell_0.size());
+            width0 = std::max(col0.size(), width0);
 
-            std::istringstream iss{el.description_ + "\n"};
-            std::string cell_1;
-            std::getline(iss, cell_1);
-
-            rows.emplace_back(std::move(cell_0), std::move(cell_1));
-            while (std::getline(iss, cell_1)) rows.emplace_back("", std::move(cell_1));
+            auto& desc = o.description_; // ref
+            for (std::size_t p0 = 0, p1 = 0; p1 != desc.npos; p0 = p1 + 1)
+            {
+                p1 = desc.find('\n', p0);
+                rows.emplace_back(std::move(col0), desc.substr(p0, p1 - p0));
+                col0.clear();
+            }
         }
     }
 
@@ -458,16 +450,19 @@ inline std::string args::usage(std::string_view program, std::string_view preamb
         rows.emplace_back("", "");
         rows.emplace_back("Parameters:", "");
 
-        for (auto&& el : params_)
+        for (auto&& p : params_)
         {
-            cell_0_max = std::max(cell_0_max, el.name_.size());
+            std::string col0 = p.name_; // copy
 
-            std::istringstream iss{el.description_ + "\n"};
-            std::string cell_1;
-            std::getline(iss, cell_1);
+            width0 = std::max(col0.size(), width0);
 
-            rows.emplace_back(el.name_, std::move(cell_1));
-            while (std::getline(iss, cell_1)) rows.emplace_back("", std::move(cell_1));
+            auto& desc = p.description_; // ref
+            for (std::size_t p0 = 0, p1 = 0; p1 != desc.npos; p0 = p1 + 1)
+            {
+                p1 = desc.find('\n', p0);
+                rows.emplace_back(std::move(col0), desc.substr(p0, p1 - p0));
+                col0.clear();
+            }
         }
     }
 
@@ -479,20 +474,15 @@ inline std::string args::usage(std::string_view program, std::string_view preamb
     }
 
     ////////////////////
-    std::ostringstream oss;
-    oss << std::left;
-
-    for (auto&& [ cell_0, cell_1 ] : rows)
+    std::string usage;
+    for (auto&& [col0, col1] : rows)
     {
-        oss << std::setw(cell_0_max) << cell_0;
-        if (cell_1.size()) oss << "    " << cell_1;
-        oss << "\n";
+        if (col1.empty()) usage += std::format("{}\n", col0);
+        else usage += std::format("{:<{}}    {}\n", col0, width0, col1);
     }
+    usage.pop_back();
 
-    auto overall = oss.str();
-    overall.pop_back(); // remove trailing '\n'
-
-    return overall;
+    return usage;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
