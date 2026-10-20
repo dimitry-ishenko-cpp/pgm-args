@@ -1,3 +1,31 @@
+pgm-args (2.0) unstable; urgency=medium
+
+  * Clean up README.md
+  * Prepare for 2.0 release
+  * Replace stringstreams with strings and std::format
+  * Add conversion test
+  * Update README.md
+  * Add basic option test
+  * Allow args::parse() to be used more than once
+  * Refactor tests
+  * test_args => test_params
+  * Rewrite tests
+  * Add conversions to README.md
+  * Update install instructions
+  * Add support for conversions
+  * Drop Ubuntu Focal support
+  * Clean-up
+  * Clean up args::parse()
+  * Improve function names
+  * Don't use <cctype>, and avoid UB
+  * Use std::ranges
+  * Merge is_valname() and is_param_name()
+  * Update copyright years
+  * Clean up comments
+  * Fix exception type
+
+ -- Dimitry Ishenko <dimitry.ishenko@gmail.com>  Mon, 19 Oct 2026 21:38:55 -0400
+
 pgm-args (1.0) unstable; urgency=medium
 
   * CMakeLists: fix test procedure
