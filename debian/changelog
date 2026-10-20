@@ -1,3 +1,12 @@
+pgm-args (2.0.1) unstable; urgency=medium
+
+  * Prepare for 2.0.1 release
+  * README: tweak
+  * d/copyright: format and update
+  * Add Debian release workflow
+
+ -- Dimitry Ishenko <dimitry.ishenko@gmail.com>  Tue, 20 Oct 2026 16:43:22 -0400
+
 pgm-args (2.0) unstable; urgency=medium
 
   * Clean up README.md
