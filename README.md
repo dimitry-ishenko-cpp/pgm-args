@@ -3,7 +3,7 @@
 This simple header-only library allows you to easily define, parse and examine
 program options and positional parameters in a C++ program. :notes:
 
-Here is a very simple example of how to use **pgm::args**:
+Here is a very basic example of how to use **pgm::args**:
 
 ```cpp
 // example1.cpp
@@ -64,7 +64,7 @@ You can install **`pgm::args`** in one of the following ways:
 1. Binary packages for Debian, Ubuntu, RaspberryPi and other Debian-based
    distributions can be installed from the [CCCP Linux Package
    Archive](https://github.com/cccp-linux/archive). Follow their instructions
-   to set up the archive, and then:
+   to set up the archive and be sure to add the _dev_ component. Then, run:
 
    ```console
    sudo apt install libpgm-args-dev
