@@ -109,8 +109,8 @@ apply to program arguments:
   `-a` `-b` `-c`
 
 * _long options_, consisting of two hyphens followed by one or more
-  alpha-numeric characters and hyphens, eg:
-  `--output` `--log-file`
+  alpha-numeric characters and hyphens, <br>
+  eg: `--output` `--log-file`
 
 :key: Several short options maybe grouped in one token:
 
@@ -267,13 +267,13 @@ the following flags combined using the vertical pipe `|` delimiter:
 
 | flag              | option             | param              | meaning |
 |:-----------------:|:------------------:|:------------------:|:--------|
-| **`pgm::req`**    | :heavy_check_mark: |                    | mandatory (or **req**uired) option<sup>1</sup>
+| **`pgm::req`**    | :heavy_check_mark: |                    | mandatory (or **req**uired) option<sup>1</sup> |
 | **`pgm::mul`**    | :heavy_check_mark: | :heavy_check_mark: | option may be specified **mul**tiple times; <br>positional parameter can accept **mul**tiple values<sup>2</sup> |
 | **`pgm::optval`** | :heavy_check_mark: |                    | option **val**ue is **opt**ional (ie, can be omitted) |
 | **`pgm::opt`**    |                    | :heavy_check_mark: | positional parameter is **opt**ional<sup>3</sup>  |
 
-<sup>1</sup> Options are optional by default.
-<sup>2</sup> There can be at most one positional parameter marked with `pgm::mul`.
+<sup>1</sup> Options are optional by default.<br>
+<sup>2</sup> There can be at most one positional parameter marked with `pgm::mul`.<br>
 <sup>3</sup> Parameters are mandatory by default.
 
 Invalid flags (such as, specifying `pgm::optval` for a positional parameter) are
@@ -295,9 +295,7 @@ or using the `add()` function:
 
 ```cpp
 void add(pgm::arg arg);
-
-template<typename... Ts>
-void add(Ts&&... values); // emplace-style
+void add(auto&&... values); // emplace-style
 ```
 
 Below are some examples:
@@ -318,7 +316,7 @@ args.add("file", pgm::opt, "Path to file");
 ```
 
 Invalid and duplicate option/parameter definitions will result in the :poop:
-`pgm::invalid_definition` exception being thrown.
+**`pgm::invalid_definition`** exception being thrown.
 
 ---
 
@@ -478,7 +476,8 @@ The subscript `operator[]` returns const ref to an instance of
   Note that `value_or(...)` only returns the default when the value is
   _missing_ – a value that is present but malformed still throws.
 
-  You can also add support for your own types by specializing `pgm::convert`.
+  You can also add support for your own types by specializing
+  **`pgm::convert`**.
 
   ```cpp
   enum class color { red, blue };
