@@ -70,11 +70,19 @@ You can install **`pgm::args`** in one of the following ways:
    sudo apt install libpgm-args-dev
    ```
 
-2. Install from source:
+2. Install from source (requires [CMake](https://cmake.org/) >= 3.22, and
+   [GoogleTest](https://github.com/google/googletest) to run tests):
 
    ```shell
-   mkdir build
-   cd build
+   o=dimitry-ishenko-cpp p=pgm-args
+
+   url=https://api.github.com/repos/${o}/${p}/releases/latest
+   curl -Lo ${p}.tar.gz $(curl -sL $url | jq -r .tarball_url)
+
+   mkdir -p ${p}/build
+   tar -xvf ${p}.tar.gz -C ${p} --strip-components=1
+
+   cd ${p}/build
    cmake ..
    make all test
    sudo make install
