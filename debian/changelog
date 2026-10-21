@@ -1,3 +1,11 @@
+pgm-args (2.0.2) unstable; urgency=medium
+
+  * Prepare for 2.0.2 release
+  * README: update build instructions
+  * README: fix code tags
+
+ -- Dimitry Ishenko <dimitry.ishenko@gmail.com>  Wed, 21 Oct 2026 15:52:55 -0400
+
 pgm-args (2.0.1) unstable; urgency=medium
 
   * Prepare for 2.0.1 release
