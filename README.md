@@ -66,13 +66,13 @@ You can install **`pgm::args`** in one of the following ways:
    Archive](https://github.com/cccp-linux/archive). Follow their instructions
    to set up the archive and be sure to add the _dev_ component. Then, run:
 
-   ```console
+   ```shell
    sudo apt install libpgm-args-dev
    ```
 
 2. Install from source:
 
-   ```console
+   ```shell
    mkdir build
    cd build
    cmake ..
@@ -82,7 +82,7 @@ You can install **`pgm::args`** in one of the following ways:
 
 3. Add as a sub-module to your project:
 
-   ```console
+   ```shell
    git submodule add https://github.com/dimitry-ishenko-cpp/pgm-args.git pgm
    ```
 
@@ -114,7 +114,7 @@ apply to program arguments:
 
 :key: Several short options maybe grouped in one token:
 
-```bash
+```shell
 foo -abc
 # is equivalent to
 foo -a -b -c
@@ -128,7 +128,7 @@ _option values_.
 :key: _Option value_ may appear as a separate token after the option, or may be
 combined with the option in one token. For example:
 
-```bash
+```shell
 foo -opath
 # is equivalent to
 foo -o path
@@ -136,7 +136,7 @@ foo -o path
 
 Likewise, for long options:
 
-```bash
+```shell
 foo --output=path
 # is equivalent to
 foo --output path
@@ -151,7 +151,7 @@ _positional parameters_.
 `--` will be treated as positional parameters, even though they start with the
 hyphen. In the following example:
 
-```bash
+```shell
 foo -a --bar baz -- -c --qux
 ```
 
