@@ -129,6 +129,8 @@ struct args
     args() = default;
     explicit args(std::initializer_list<arg> il) { for (auto&& v : il) add(v); }
 
+    void reset();
+
     void add(arg);
     void add(auto&&... args) { add(arg{ std::forward<decltype (args)>(args)... }); }
 

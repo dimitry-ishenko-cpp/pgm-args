@@ -191,6 +191,13 @@ inline arg::arg(std::string s1, std::string s2, std::string s3, pgm::spec spec, 
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+inline void args::reset()
+{
+    for (auto& o : options_) o.values_.clear();
+    for (auto& p : params_)  p.values_.clear();
+}
+
+////////////////////////////////////////////////////////////////////////////////
 inline void args::add(arg new_)
 {
     if (new_.is_option())
@@ -244,9 +251,6 @@ inline argval const& args::operator[](std::string_view name) const
 ////////////////////////////////////////////////////////////////////////////////
 inline void args::parse(int argc, char* argv[])
 {
-    for (auto& o : options_) o.values_.clear();
-    for (auto& p : params_)  p.values_.clear();
-
     std::deque<std::string> args;
     for (auto n = 1; n < argc; ++n) args.emplace_back(argv[n]);
 
