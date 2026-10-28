@@ -354,10 +354,9 @@ This function may throw one of two exceptions:
   marked as `pgm::req`, or for a missing positional parameter _not_ marked as
   `pgm::opt`.
 
-:blue_square: In addition to the command line, options can be read from a
-config file:
+:blue_square: In addition to the command line, options can be read from a file:
 
-```c++
+```cpp
 pgm::args args{ ... };
 args.parse("zaphod.conf");
 ```
@@ -377,9 +376,30 @@ include = bar.h         # options marked `pgm::mul` may appear more than once
 include = "baz # qux.h" # quoted values may contain spaces and `#`
 ```
 
-This overload of `parse(path)` does not check for missing required options, and
+The overload of `parse(path)` does not check for missing required options, and
 allows single-value options to be overridden with later `parse(...)` calls.
 Multi-value options will accumulate all values across `parse(...)` calls.
+
+The usual pattern is:
+
+```cpp
+namespace fs = std::filesystem;
+
+int main(int argc, char* argv[])
+{
+    auto xdg = std::getenv("XDG_CONFIG_HOME");
+    auto home = std::getenv("HOME");
+
+    auto config_dir = (xdg && *xdg) ? fs::path{xdg}
+        : fs::path{(home && *home) ? home : "."} / ".config";
+
+    pgm::args args{ ... };
+
+    args.parse(config_dir / "deep_thought.conf");   // read defaults from file
+    args.parse(argc, argv);                         // overrides come from the command line
+    ...
+}
+```
 
 ---
 
