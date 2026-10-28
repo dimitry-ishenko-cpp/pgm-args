@@ -1,3 +1,15 @@
+pgm-args (3.0) unstable; urgency=medium
+
+  * Prepare for 3.0 release
+  * README: add blurb about the new parse() function
+  * Override options between parse() calls
+  * Add test for config files
+  * Add support for config files
+  * Fix tests that reuse pgm::args
+  * Add explicit reset() function
+
+ -- Dimitry Ishenko <dimitry.ishenko@gmail.com>  Wed, 28 Oct 2026 01:11:19 -0400
+
 pgm-args (2.0.2) unstable; urgency=medium
 
   * Prepare for 2.0.2 release
