@@ -24,6 +24,7 @@ TEST_F(convert_basic, int)
     struct opt_val { std::string_view opt; int val; };
     for (auto [n, v] : std::initializer_list<opt_val>{ {"42",42}, {"-7",-7}, {"+8",+8}, {"0",0}, {"007",007} })
     {
+        args.reset();
         env env{ "pgm", "-n", n };
         EXPECT_NO_THROW({ args.parse(env.argc, env.argv); });
 
@@ -37,6 +38,7 @@ TEST_F(convert_basic, real)
     struct opt_val { std::string_view opt; double val; };
     for (auto [n, v] : std::initializer_list<opt_val>{ {"3.25",3.25}, {"-1e3", -1e3}, {"+0.5",+0.5}, {".5",.5}, {"5.",5.}})
     {
+        args.reset();
         env env{ "pgm", "--real", n };
         EXPECT_NO_THROW({ args.parse(env.argc, env.argv); });
 
@@ -59,6 +61,7 @@ TEST_F(convert_basic, bool_true_false)
 
     EXPECT_TRUE(args["-b"].value<bool>());
 
+    args.reset();
     env env2{ "pgm", "--bool", "false" };
     EXPECT_NO_THROW({ args.parse(env2.argc, env2.argv); });
 
@@ -69,6 +72,7 @@ TEST_F(convert_basic, bool_variants)
 {
     for (auto s : { "yes", "YES", "on", "ON", "1" })
     {
+        args.reset();
         env env{ "pgm", "-b", s };
         EXPECT_NO_THROW({ args.parse(env.argc, env.argv); });
         EXPECT_TRUE(args["-b"].value<bool>());
@@ -79,6 +83,7 @@ TEST_F(convert_basic, bool_variants_false)
 {
     for (auto s : { "no", "NO", "off", "OFF", "0" })
     {
+        args.reset();
         env env{ "pgm", "-b", s };
         EXPECT_NO_THROW({ args.parse(env.argc, env.argv); });
         EXPECT_FALSE(args["-b"].value<bool>());
@@ -116,6 +121,7 @@ TEST_F(convert_basic, invalid_int)
 {
     for (auto n : { "abc", "", "4x", "x4", "4.5", " 4", "4 ", "0x10", "1e3", "+", "-", "++4", "+-4", "-+4" })
     {
+        args.reset();
         env env{ "pgm", "-n", n };
         EXPECT_NO_THROW({ args.parse(env.argc, env.argv); });
 
@@ -127,6 +133,7 @@ TEST_F(convert_basic, invalid_real)
 {
     for (auto n : { "abc", "", "1.5x", "1,5", " 1.5", "1.5 ", "+", "++1.5", "+-1.5", "1e", "1e999" })
     {
+        args.reset();
         env env{ "pgm", "-r", n };
         EXPECT_NO_THROW({ args.parse(env.argc, env.argv); });
 

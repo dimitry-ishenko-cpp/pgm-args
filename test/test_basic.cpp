@@ -79,6 +79,7 @@ TEST_F(options_basic, unrecognized)
     env env1{ "pgm", "--unknown" };
     EXPECT_THROW({ args.parse(env1.argc, env1.argv); }, pgm::invalid_argument);
 
+    args.reset();
     env env2{ "pgm", "-x" };
     EXPECT_THROW({ args.parse(env2.argc, env2.argv); }, pgm::invalid_argument);
 }
@@ -136,6 +137,7 @@ TEST_F(options_values, missing_value)
     env env1{ "pgm", "-o" };
     EXPECT_THROW({ args.parse(env1.argc, env1.argv); }, pgm::missing_argument);
 
+    args.reset();
     env env2{ "pgm", "--input" };
     EXPECT_THROW({ args.parse(env2.argc, env2.argv); }, pgm::missing_argument);
 }
@@ -249,6 +251,7 @@ TEST_F(options_req, present)
     EXPECT_EQ(args["-o"].value(), "file");
     EXPECT_FALSE(args["-v"]);
 
+    args.reset();
     env env2{ "pgm", "-v" };
     EXPECT_THROW({ args.parse(env2.argc, env2.argv); }, pgm::missing_argument);
 }
