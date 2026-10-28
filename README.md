@@ -328,7 +328,7 @@ Invalid and duplicate option/parameter definitions will result in the :poop:
 
 ---
 
-### :three: Parse the Command Line
+### :three: Parse Options
 
 Having defined your options and parameters, you can now call the `parse()`
 member function of **`pgm::args`** passing it `argc` and `argv`:
@@ -353,6 +353,33 @@ This function may throw one of two exceptions:
 * :poop: **`pgm::missing_argument`** will be thrown for any missing option
   marked as `pgm::req`, or for a missing positional parameter _not_ marked as
   `pgm::opt`.
+
+:blue_square: In addition to the command line, options can be read from a
+config file:
+
+```c++
+pgm::args args{ ... };
+args.parse("zaphod.conf");
+```
+
+The file is a simple list of long option names (without the leading `--`) and
+their values:
+
+```ini
+# comments and blank lines are ignored
+# [section] headers are also ignored
+
+verbose                 # bare names with no `=` set flags
+output  = /tmp/foo.log
+debug   = 3
+include = foo.h
+include = bar.h         # options marked `pgm::mul` may appear more than once
+include = "baz # qux.h" # quoted values may contain spaces and `#`
+```
+
+This overload of `parse(path)` does not check for missing required options, and
+allows single-value options to be overridden with later `parse(...)` calls.
+Multi-value options will accumulate all values across `parse(...)` calls.
 
 ---
 
