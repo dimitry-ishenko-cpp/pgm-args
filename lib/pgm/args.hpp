@@ -7,6 +7,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 #pragma once
 
+#include <filesystem>
 #include <initializer_list>
 #include <stdexcept>
 #include <string>
@@ -136,6 +137,7 @@ struct args
 
     argval const& operator[](std::string_view) const;
 
+    void parse(const std::filesystem::path&);
     void parse(int argc, char* argv[]);
 
     std::string usage(std::string_view program, std::string_view preamble = {},

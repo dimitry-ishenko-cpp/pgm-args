@@ -13,8 +13,10 @@
 #include <charconv> // std::from_chars
 #include <deque>
 #include <format>
+#include <fstream>
 #include <optional>
 #include <ranges>
+#include <sstream>
 #include <tuple>
 #include <vector>
 #include <type_traits>
@@ -246,6 +248,94 @@ inline argval const& args::operator[](std::string_view name) const
         for (auto&& el : params_) if (el.name_ == name) return el.values_;
     }
     throw invalid_argument{"unrecognized option or param '" + std::string{name} + "'"};
+}
+
+////////////////////////////////////////////////////////////////////////////////
+inline void args::parse(const std::filesystem::path& path)
+{
+    std::ifstream in{path};
+    if (!in) throw std::runtime_error{"cannot open '" + path.string() + "'"};
+
+    struct invalid { std::string why; };
+    struct missing { std::string why; };
+
+    std::string line;
+    for (int n = 1; std::getline(in, line); ++n)
+    try
+    {
+        std::string name;
+        std::optional<std::string> value;
+
+        std::istringstream is{line};
+
+        if ((is >> std::ws).eof()) continue;
+        is >> name;
+        if (name.starts_with('#') || (name.starts_with('[') && name.ends_with(']'))) continue;
+
+        if (!(is >> std::ws).eof())
+        {
+            std::string word;
+            is >> word;
+
+            if (!word.starts_with('#'))
+            {
+                if (word != "=") throw invalid{"missing '='"};
+                if ((is >> std::ws).eof()) throw missing{"missing value"};
+
+                char ch = is.peek();
+                if (ch == '"')
+                {
+                    if (!(is >> std::quoted(word))) throw invalid{"unclosed quote"};
+                }
+                else if (ch != '#') is >> word;
+                else throw missing{"missing value"};
+
+                value = std::move(word);
+
+                if (!(is >> std::ws).eof())
+                {
+                    is >> word;
+                    if (!word.starts_with('#')) throw invalid{"garbage at end"};
+                }
+            }
+        }
+
+        // find matching definition
+        auto match = ranges::find_if(options_,
+            [name = "--" + name](auto&& o){ return name == o.long_; }
+        );
+        if (match == options_.end())
+            throw invalid{"unrecognized option '" + name + "'"};
+
+        else if (match->valname_.empty()) // doesn't take values
+        {
+            // ...but we have one
+            if (value) throw invalid{"'" + name + "' doesn't take values"};
+            value = ""; // indicate presence
+        }
+        else // may take a value
+        {
+            // ...but we don't have one
+            if (!value)
+            {
+                if (!match->optval_) throw missing{"'" + name + "' requires a value"};
+                value = ""; // indicate presence
+            }
+        }
+
+        if (!match->mul_ && !match->values_.empty())
+            throw invalid{"duplicate option '" + name + "'"};
+
+        match->values_.add(std::move(*value));
+    }
+    catch (const invalid& e)
+    {
+        throw invalid_argument{path.string() + ":" + std::to_string(n) + " - " + e.why};
+    }
+    catch (const missing& e)
+    {
+        throw missing_argument{path.string() + ":" + std::to_string(n) + " - " + e.why};
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
