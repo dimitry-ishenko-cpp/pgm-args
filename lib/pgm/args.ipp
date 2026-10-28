@@ -259,6 +259,8 @@ inline void args::parse(const std::filesystem::path& path)
     struct invalid { std::string why; };
     struct missing { std::string why; };
 
+    std::vector<bool> seen(options_.size());
+
     std::string line;
     for (int n = 1; std::getline(in, line); ++n)
     try
@@ -323,8 +325,16 @@ inline void args::parse(const std::filesystem::path& path)
             }
         }
 
-        if (!match->mul_ && !match->values_.empty())
-            throw invalid{"duplicate option '" + name + "'"};
+        if (!match->mul_)
+        {
+            auto idx = match - options_.begin();
+            if (!seen[idx])
+            {
+                seen[idx] = true;
+                match->values_.clear();
+            }
+            else throw invalid{"duplicate option '" + name + "'"};
+        }
 
         match->values_.add(std::move(*value));
     }
@@ -346,6 +356,8 @@ inline void args::parse(int argc, char* argv[])
 
     bool had_token = false; // end-of-options token ("--")
     std::deque<std::string> store; // for params
+
+    std::vector<bool> seen(options_.size());
 
     while (args.size())
     {
@@ -419,8 +431,16 @@ inline void args::parse(int argc, char* argv[])
                 }
             }
 
-            if (!match->mul_ && !match->values_.empty())
-                throw invalid_argument{"duplicate option '" + name + "'"};
+            if (!match->mul_)
+            {
+                auto idx = match - options_.begin();
+                if (!seen[idx])
+                {
+                    seen[idx] = true;
+                    match->values_.clear();
+                }
+                else throw invalid_argument{"duplicate option '" + name + "'"};
+            }
 
             match->values_.add(std::move(*value));
         }
