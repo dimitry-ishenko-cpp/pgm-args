@@ -23,6 +23,20 @@ namespace pgm
 template<typename V> V convert(std::string_view);
 
 ////////////////////////////////////////////////////////////////////////////////
+// option/param spec
+enum spec
+{
+    req    = 1, // required option
+    mul    = 2, // option/param can be specified multiple times
+    optval = 4, // option value is optional
+    opt    = 8, // optional param
+};
+
+constexpr auto operator|(spec lhs, spec rhs) noexcept {
+    return static_cast<spec>(static_cast<int>(lhs) | static_cast<int>(rhs));
+}
+
+////////////////////////////////////////////////////////////////////////////////
 // option/param values
 struct argval
 {
@@ -49,20 +63,6 @@ private:
     void clear() noexcept { data_.clear(); }
     void add(std::string val) { data_.push_back(std::move(val)); }
 };
-
-////////////////////////////////////////////////////////////////////////////////
-// option/param spec
-enum spec
-{
-    req    = 1, // required option
-    mul    = 2, // option/param can be specified multiple times
-    optval = 4, // option value is optional
-    opt    = 8, // optional param
-};
-
-constexpr auto operator|(spec lhs, spec rhs) noexcept {
-    return static_cast<spec>(static_cast<int>(lhs) | static_cast<int>(rhs));
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 struct option
