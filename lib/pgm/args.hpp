@@ -26,10 +26,10 @@ template<typename V> V convert(std::string_view);
 // option/param values
 struct argval
 {
-    auto count() const { return data_.size(); }
-    auto empty() const { return data_.empty(); }
+    auto count() const noexcept { return data_.size(); }
+    auto empty() const noexcept { return data_.empty(); }
 
-    explicit operator bool() const { return !empty(); }
+    explicit operator bool() const noexcept { return !empty(); }
 
     template<typename V = std::string>
     decltype(auto) value(std::size_t n = 0) const;
@@ -46,7 +46,7 @@ private:
     std::vector<std::string> data_;
 
     friend struct args;
-    void clear() { data_.clear(); }
+    void clear() noexcept { data_.clear(); }
     void add(std::string val) { data_.push_back(std::move(val)); }
 };
 
@@ -60,7 +60,7 @@ enum spec
     opt    = 8, // optional param
 };
 
-constexpr auto operator|(spec lhs, spec rhs) {
+constexpr auto operator|(spec lhs, spec rhs) noexcept {
     return static_cast<spec>(static_cast<int>(lhs) | static_cast<int>(rhs));
 }
 
@@ -114,8 +114,8 @@ struct arg
     { }
     arg(std::string s1, std::string s2, std::string s3, spec, std::string description);
 
-    auto is_option() const { return std::holds_alternative<option>(val_); }
-    auto is_param() const { return std::holds_alternative<param>(val_); }
+    auto is_option() const noexcept { return std::holds_alternative<option>(val_); }
+    auto is_param() const noexcept { return std::holds_alternative<param>(val_); }
 
     auto& to_option() { return std::get<option>(val_); }
     auto& to_param() { return std::get<param>(val_); }
@@ -127,10 +127,10 @@ private:
 ////////////////////////////////////////////////////////////////////////////////
 struct args
 {
-    args() = default;
+    args() noexcept = default;
     explicit args(std::initializer_list<arg> il) { for (auto&& v : il) add(v); }
 
-    void reset();
+    void reset() noexcept;
 
     void add(arg);
     void add(auto&&... args) { add(arg{ std::forward<decltype (args)>(args)... }); }

@@ -193,7 +193,7 @@ inline arg::arg(std::string s1, std::string s2, std::string s3, pgm::spec spec, 
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-inline void args::reset()
+inline void args::reset() noexcept
 {
     for (auto& o : options_) o.values_.clear();
     for (auto& p : params_)  p.values_.clear();
