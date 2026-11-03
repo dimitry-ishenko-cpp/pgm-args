@@ -67,28 +67,28 @@ private:
 ////////////////////////////////////////////////////////////////////////////////
 struct option
 {
-    std::string short_;       // short option name
-    std::string long_;        // long option name
-    std::string valname_;     // name of the option value; eg, --opt-name=<value>
-    std::string description_; // description
+    std::string short_name;  // short option name
+    std::string long_name;   // long option name
+    std::string valname;     // name of the option value; eg, --opt-name=<value>
+    std::string description; // description
 
-    bool req_ = false;        // required option
-    bool mul_ = false;        // can be specified multiple times
-    bool optval_ = false;     // option value is optional
+    bool req = false;        // required option
+    bool mul = false;        // can be specified multiple times
+    bool optval = false;     // option value is optional
 
-    argval values_;           // parsed option values
+    argval values;           // parsed option values
 };
 
 ////////////////////////////////////////////////////////////////////////////////
 struct param
 {
-    std::string name_;        // param name
-    std::string description_; // description
+    std::string name;        // param name
+    std::string description; // description
 
-    bool opt_ = false;        // optional param
-    bool mul_ = false;        // can be specified multiple times
+    bool opt = false;        // optional param
+    bool mul = false;        // can be specified multiple times
 
-    argval values_;           // parsed param values
+    argval values;           // parsed param values
 };
 
 ////////////////////////////////////////////////////////////////////////////////

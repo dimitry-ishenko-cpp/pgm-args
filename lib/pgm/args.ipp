@@ -195,8 +195,8 @@ inline arg::arg(std::string s1, std::string s2, std::string s3, pgm::spec spec, 
 ////////////////////////////////////////////////////////////////////////////////
 inline void args::reset() noexcept
 {
-    for (auto& o : options_) o.values_.clear();
-    for (auto& p : params_)  p.values_.clear();
+    for (auto& o : options_) o.values.clear();
+    for (auto& p : params_)  p.values.clear();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -214,13 +214,13 @@ inline void args::add(arg new_)
 ////////////////////////////////////////////////////////////////////////////////
 inline void args::add_option(option new_)
 {
-    if (!new_.short_.empty()
-        && ranges::find(options_, new_.short_, &option::short_) != options_.end())
-            throw invalid_definition{"duplicate option '" + new_.short_ + "'"};
+    if (!new_.short_name.empty()
+        && ranges::find(options_, new_.short_name, &option::short_name) != options_.end())
+            throw invalid_definition{"duplicate option '" + new_.short_name + "'"};
 
-    if (!new_.long_.empty()
-        && ranges::find(options_, new_.long_, &option::long_) != options_.end())
-            throw invalid_definition{"duplicate option '" + new_.long_ + "'"};
+    if (!new_.long_name.empty()
+        && ranges::find(options_, new_.long_name, &option::long_name) != options_.end())
+            throw invalid_definition{"duplicate option '" + new_.long_name + "'"};
 
     options_.push_back(std::move(new_));
 }
@@ -228,11 +228,11 @@ inline void args::add_option(option new_)
 ////////////////////////////////////////////////////////////////////////////////
 inline void args::add_param(param new_)
 {
-    if (ranges::find(params_, new_.name_, &param::name_) != params_.end())
-        throw invalid_definition{"duplicate param '" + new_.name_ + "'"};
+    if (ranges::find(params_, new_.name, &param::name) != params_.end())
+        throw invalid_definition{"duplicate param '" + new_.name + "'"};
 
-    if (new_.mul_ && ranges::any_of(params_, &param::mul_))
-        throw invalid_definition{"more than one multi-value param '" + new_.name_ + "'"};
+    if (new_.mul && ranges::any_of(params_, &param::mul))
+        throw invalid_definition{"more than one multi-value param '" + new_.name + "'"};
 
     params_.push_back(std::move(new_));
 }
@@ -243,9 +243,9 @@ inline argval const& args::operator[](std::string_view name) const
     if (!name.empty())
     {
         for (auto&& el : options_)
-            if (el.short_ == name || el.long_ == name) return el.values_;
+            if (el.short_name == name || el.long_name == name) return el.values;
 
-        for (auto&& el : params_) if (el.name_ == name) return el.values_;
+        for (auto&& el : params_) if (el.name == name) return el.values;
     }
     throw invalid_argument{"unrecognized option or param '" + std::string{name} + "'"};
 }
@@ -304,12 +304,12 @@ inline void args::parse(const std::filesystem::path& path)
 
         // find matching definition
         auto match = ranges::find_if(options_,
-            [name = "--" + name](auto&& o){ return name == o.long_; }
+            [name = "--" + name](auto&& o){ return name == o.long_name; }
         );
         if (match == options_.end())
             throw invalid{"unrecognized option '" + name + "'"};
 
-        else if (match->valname_.empty()) // doesn't take values
+        else if (match->valname.empty()) // doesn't take values
         {
             // ...but we have one
             if (value) throw invalid{"'" + name + "' doesn't take values"};
@@ -320,23 +320,23 @@ inline void args::parse(const std::filesystem::path& path)
             // ...but we don't have one
             if (!value)
             {
-                if (!match->optval_) throw missing{"'" + name + "' requires a value"};
+                if (!match->optval) throw missing{"'" + name + "' requires a value"};
                 value = ""; // indicate presence
             }
         }
 
-        if (!match->mul_)
+        if (!match->mul)
         {
             auto idx = match - options_.begin();
             if (!seen[idx])
             {
                 seen[idx] = true;
-                match->values_.clear();
+                match->values.clear();
             }
             else throw invalid{"duplicate option '" + name + "'"};
         }
 
-        match->values_.add(std::move(*value));
+        match->values.add(std::move(*value));
     }
     catch (const invalid& e)
     {
@@ -391,12 +391,12 @@ inline void args::parse(int argc, char* argv[])
 
             // find matching definition
             auto match = ranges::find_if(options_,
-                [&](auto&& o){ return name == o.short_ || name == o.long_; }
+                [&](auto&& o){ return name == o.short_name || name == o.long_name; }
             );
             if (match == options_.end())
                 throw invalid_argument{"unrecognized option '" + name + "'"};
 
-            else if (match->valname_.empty()) // doesn't take values
+            else if (match->valname.empty()) // doesn't take values
             {
                 if (value) // ...but we have one
                 {
@@ -410,7 +410,7 @@ inline void args::parse(int argc, char* argv[])
                 }
                 value = ""; // indicate presence
             }
-            else if (match->optval_) // value is optional
+            else if (match->optval) // value is optional
             {
                 if (!value) // ...and we don't have one
                 {
@@ -431,40 +431,40 @@ inline void args::parse(int argc, char* argv[])
                 }
             }
 
-            if (!match->mul_)
+            if (!match->mul)
             {
                 auto idx = match - options_.begin();
                 if (!seen[idx])
                 {
                     seen[idx] = true;
-                    match->values_.clear();
+                    match->values.clear();
                 }
                 else throw invalid_argument{"duplicate option '" + name + "'"};
             }
 
-            match->values_.add(std::move(*value));
+            match->values.add(std::move(*value));
         }
     }
 
     // check required options
     for (auto&& o : options_)
-        if (o.req_ && o.values_.empty())
+        if (o.req && o.values.empty())
         {
-            auto name = o.short_.empty() ? o.long_
-                : o.long_.empty() ? o.short_
-                : o.short_ + ", " + o.long_;
+            auto name = o.short_name.empty() ? o.long_name
+                : o.long_name.empty() ? o.short_name
+                : o.short_name + ", " + o.long_name;
             throw missing_argument{"option '" + name + "' is required"};
         }
 
     // # of non-opt params to fill
-    auto need = static_cast<std::size_t>( ranges::count(params_, false, &param::opt_) );
+    auto need = static_cast<std::size_t>( ranges::count(params_, false, &param::opt) );
 
     auto remain = params_.size();
     for (auto&& p : params_)
     {
         --remain;
 
-        if (p.opt_)
+        if (p.opt)
         {
             // can we spare a value for this param?
             if (!(store.size() > need)) continue;
@@ -474,10 +474,10 @@ inline void args::parse(int argc, char* argv[])
         if (store.size())
         {
             // munch as many values as we can
-            do p.values_.add(pop(store));
-            while (p.mul_ && store.size() > remain);
+            do p.values.add(pop(store));
+            while (p.mul && store.size() > remain);
         }
-        else throw missing_argument{"param '" + p.name_ + "' is required"};
+        else throw missing_argument{"param '" + p.name + "' is required"};
     }
 
     if (store.size()) throw invalid_argument{"extra param '" + store[0] + "'"};
@@ -502,8 +502,8 @@ inline std::string args::usage(std::string_view program, std::string_view preamb
     if (options_.size()) col0 += " [option]...";
     for (auto&& p : params_)
     {
-        col0 += (p.opt_ ? " [" : " <") + p.name_ + (p.opt_ ? "]" : ">");
-        if (p.mul_) col0 += "...";
+        col0 += (p.opt ? " [" : " <") + p.name + (p.opt ? "]" : ">");
+        if (p.mul) col0 += "...";
     }
     rows.emplace_back(std::move(col0), "");
 
@@ -520,35 +520,35 @@ inline std::string args::usage(std::string_view program, std::string_view preamb
         rows.emplace_back("", "");
         rows.emplace_back("Options:", "");
 
-        bool fill = ranges::any_of(options_, [](auto&& s){ return s.size(); }, &option::short_);
+        bool fill = ranges::any_of(options_, [](auto&& s){ return s.size(); }, &option::short_name);
         for (auto&& o : options_)
         {
             std::string col0;
-            if (o.short_.size())
+            if (o.short_name.size())
             {
-                col0 += o.short_;                              // "-o"
-                if (o.long_.size())
+                col0 += o.short_name;                           // "-o"
+                if (o.long_name.size())
                 {
-                    col0 += ", " + o.long_;                    // "-o, --opt"
-                    if (o.valname_.size()) col0 += "=";        // "-o, --opt="
+                    col0 += ", " + o.long_name;                 // "-o, --opt"
+                    if (o.valname.size()) col0 += "=";          // "-o, --opt="
                 }
-                else if (o.valname_.size()) col0 += " ";       // "-o "
+                else if (o.valname.size()) col0 += " ";         // "-o "
             }
             else
             {
-                col0 += (fill ? "    " : "") + o.long_;        // "    --opt"
-                if (o.valname_.size()) col0 += "=";            // "    --opt="
+                col0 += (fill ? "    " : "") + o.long_name;     // "    --opt"
+                if (o.valname.size()) col0 += "=";              // "    --opt="
             }
 
-            if (!o.valname_.empty())
+            if (!o.valname.empty())
             {
-                if (o.optval_) col0 += "[" + o.valname_ + "]"; // ...[val]
-                else           col0 += "<" + o.valname_ + ">"; // ...<val>
+                if (o.optval) col0 += "[" + o.valname + "]";    // ...[val]
+                else          col0 += "<" + o.valname + ">";    // ...<val>
             }
 
             width0 = std::max(col0.size(), width0);
 
-            auto& desc = o.description_; // ref
+            auto& desc = o.description; // ref
             for (std::size_t p0 = 0, p1 = 0; p1 != desc.npos; p0 = p1 + 1)
             {
                 p1 = desc.find('\n', p0);
@@ -566,11 +566,11 @@ inline std::string args::usage(std::string_view program, std::string_view preamb
 
         for (auto&& p : params_)
         {
-            std::string col0 = p.name_; // copy
+            std::string col0 = p.name; // copy
 
             width0 = std::max(col0.size(), width0);
 
-            auto& desc = p.description_; // ref
+            auto& desc = p.description; // ref
             for (std::size_t p0 = 0, p1 = 0; p1 != desc.npos; p0 = p1 + 1)
             {
                 p1 = desc.find('\n', p0);
