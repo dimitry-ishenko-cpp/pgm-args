@@ -58,15 +58,15 @@ constexpr bool is_valid_name(std::string_view s) {
 constexpr bool is_not_option(std::string_view s) { return s.empty() || s == "-" || s[0] != '-'; }
 
 ////////////////////////////////////////////////////////////////////////////////
-inline auto make_option(std::string s1, std::string s2, std::string s3, pgm::spec spec, std::string description)
+inline auto make_option(std::string s1, std::string s2, std::string s3, pgm::spec spec, std::string desc)
 {
-    return option{ std::move(s1), std::move(s2), std::move(s3), std::move(description),
+    return option{ std::move(s1), std::move(s2), std::move(s3), std::move(desc),
         !!(spec & req), !!(spec & mul), !!(spec & optval), {}
     };
 }
 
-inline auto make_param(std::string s, pgm::spec spec, std::string description) {
-    return param{ std::move(s), std::move(description), !!(spec & opt), !!(spec & mul), {} };
+inline auto make_param(std::string s, pgm::spec spec, std::string desc) {
+    return param{ std::move(s), std::move(desc), !!(spec & opt), !!(spec & mul), {} };
 }
 
 inline auto pop(std::deque<std::string>& q)
@@ -140,37 +140,37 @@ decltype(auto) argval::values() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-inline arg::arg(std::string s, pgm::spec spec, std::string description)
+inline arg::arg(std::string s, pgm::spec spec, std::string desc)
 {
     if (is_valid_short_option(s))
-        val_ = make_option(std::move(s), {}, {}, spec, std::move(description));
+        val_ = make_option(std::move(s), {}, {}, spec, std::move(desc));
 
     else if (is_valid_long_option(s))
-        val_ = make_option({}, std::move(s), {}, spec, std::move(description));
+        val_ = make_option({}, std::move(s), {}, spec, std::move(desc));
 
     else if (is_valid_name(s))
-        val_ = make_param(std::move(s), spec, std::move(description));
+        val_ = make_param(std::move(s), spec, std::move(desc));
 
     else throw invalid_definition{"bad option or param name '" + s + "'"};
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-inline arg::arg(std::string s1, std::string s2, pgm::spec spec, std::string description)
+inline arg::arg(std::string s1, std::string s2, pgm::spec spec, std::string desc)
 {
     if (is_valid_short_option(s1))
     {
         if (is_valid_long_option(s2))
-            val_ = make_option(std::move(s1), std::move(s2), {}, spec, std::move(description));
+            val_ = make_option(std::move(s1), std::move(s2), {}, spec, std::move(desc));
 
         else if (is_valid_name(s2))
-            val_ = make_option(std::move(s1), {}, std::move(s2), spec, std::move(description));
+            val_ = make_option(std::move(s1), {}, std::move(s2), spec, std::move(desc));
 
         else throw invalid_definition{"bad long option or option value name '" + s2 + "'"};
     }
     else if (is_valid_long_option(s1))
     {
         if (is_valid_name(s2))
-            val_ = make_option({}, std::move(s1), std::move(s2), spec, std::move(description));
+            val_ = make_option({}, std::move(s1), std::move(s2), spec, std::move(desc));
 
         else throw invalid_definition{"bad option value name '" + s2 + "'"};
     }
@@ -178,7 +178,7 @@ inline arg::arg(std::string s1, std::string s2, pgm::spec spec, std::string desc
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-inline arg::arg(std::string s1, std::string s2, std::string s3, pgm::spec spec, std::string description)
+inline arg::arg(std::string s1, std::string s2, std::string s3, pgm::spec spec, std::string desc)
 {
     if (!is_valid_short_option(s1))
         throw invalid_definition{"bad short option name '" + s1 + "'"};
@@ -189,7 +189,7 @@ inline arg::arg(std::string s1, std::string s2, std::string s3, pgm::spec spec, 
     else if (!is_valid_name(s3))
         throw invalid_definition{"bad option value name '" + s3 + "'"};
 
-    else val_ = make_option(std::move(s1), std::move(s2), std::move(s3), spec, std::move(description));
+    else val_ = make_option(std::move(s1), std::move(s2), std::move(s3), spec, std::move(desc));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -200,41 +200,40 @@ inline void args::reset() noexcept
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-inline void args::add(arg new_)
+inline void args::add(arg a)
 {
-    if (new_.is_option())
-        add_option(std::move(new_.to_option()));
-
-    else if (new_.is_param())
-        add_param(std::move(new_.to_param()));
-
+    if (a.is_option())
+        add_option(std::move(a.to_option()));
+    else if (a.is_param())
+        add_param(std::move(a.to_param()));
     else throw invalid_definition{"neither option nor param"};
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-inline void args::add_option(option new_)
+inline void args::add_option(option o)
 {
-    if (!new_.short_name.empty()
-        && ranges::find(options_, new_.short_name, &option::short_name) != options_.end())
-            throw invalid_definition{"duplicate option '" + new_.short_name + "'"};
+    if (!o.short_name.empty()
+        && ranges::find(options_, o.short_name, &option::short_name) != options_.end())
+            throw invalid_definition{"duplicate option '" + o.short_name + "'"};
 
-    if (!new_.long_name.empty()
-        && ranges::find(options_, new_.long_name, &option::long_name) != options_.end())
-            throw invalid_definition{"duplicate option '" + new_.long_name + "'"};
+    if (!o.long_name.empty()
+        && ranges::find(options_, o.long_name, &option::long_name) != options_.end())
+            throw invalid_definition{"duplicate option '" + o.long_name + "'"};
 
-    options_.push_back(std::move(new_));
+    options_.push_back(std::move(o));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-inline void args::add_param(param new_)
+inline void args::add_param(param p)
 {
-    if (ranges::find(params_, new_.name, &param::name) != params_.end())
-        throw invalid_definition{"duplicate param '" + new_.name + "'"};
+    if (ranges::find(params_, p.name, &param::name) != params_.end())
+        throw invalid_definition{"duplicate param '" + p.name + "'"};
 
-    if (new_.mul && ranges::any_of(params_, &param::mul))
-        throw invalid_definition{"more than one multi-value param '" + new_.name + "'"};
+    if (p.mul && ranges::any_of(params_, &param::mul))
+        throw invalid_definition{"more than one multi-value param '" + p.name + "'"};
 
-    params_.push_back(std::move(new_));
+    p.values.name_ = p.name;
+    params_.push_back(std::move(p));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
