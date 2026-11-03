@@ -21,14 +21,14 @@ int main(int argc, char* argv[])
 
     args.parse(argc, argv);
 
-    if (args["--version"])
-    {
-        std::cout << argv[0] << " version " << 0.42 << std::endl;
-        return 0;
-    }
     if (args["--help"])
     {
         std::cout << args.usage(argv[0]) << std::endl;
+        return 0;
+    }
+    if (args["--version"])
+    {
+        std::cout << argv[0] << " version " << 0.42 << std::endl;
         return 0;
     }
 
@@ -316,7 +316,7 @@ pgm::args args
 };
 
 // construct option -d and add it to the args
-auto arg = pgm::arg{"-d", "--debug", pgm::mul, "Increase debug level"};
+pgm::arg arg{ "-d", "--debug", pgm::mul, "Increase debug level" };
 args.add(std::move(arg));
 
 // add positional param 'file' directly to the args (emplace-style)
@@ -395,8 +395,8 @@ int main(int argc, char* argv[])
 
     pgm::args args{ ... };
 
-    args.parse(config_dir / "deep_thought.conf");   // read defaults from file
-    args.parse(argc, argv);                         // overrides come from the command line
+    args.parse(config_dir / "deep_thought.conf"); // read defaults from file
+    args.parse(argc, argv);                       // overrides come from the command line
     ...
 }
 ```
@@ -463,12 +463,15 @@ The subscript `operator[]` returns const ref to an instance of
   try { args.parse(argc, argv); }
   catch (...) { ep = std::current_exception(); }
 
-  if (args["--help"]) show_usage();
-  else if (ep) std::rethrow_exception(ep);
-  else
+  if (args["--help"])
   {
-      // process remaining options/params
+      // show usage
+      return 0;
   }
+  else if (ep) std::rethrow_exception(ep);
+
+  // process remaining options/params
+  //
   ```
 
 * :rose: Call the `value()` function to access the option/param value. If the
@@ -538,7 +541,7 @@ The subscript `operator[]` returns const ref to an instance of
   enum class color { red, blue };
 
   template<>
-  inline pgm::expected<color> pgm::convert<color>(std::string_view s)
+  pgm::expected<color> pgm::convert<color>(std::string_view s)
   {
       if (s ==  "red") return color::red;
       if (s == "blue") return color::blue;
@@ -598,8 +601,6 @@ Here is a more complete example of using **pgm::args**:
 #include <vector>
 
 void show_usage(const pgm::args& args, std::string_view name);
-void show_version(std::string_view name);
-
 void transfer(std::string_view source, std::string_view dest);
 
 int main(int argc, char* argv[])
@@ -631,44 +632,45 @@ try
     catch (...) { ep = std::current_exception(); }
 
     if (args["--help"])
-        show_usage(args, name);
-
-    else if (args["--version"])
-        show_version(name);
-
-    else if (ep)
-        std::rethrow_exception(ep);
-
-    else // normal program flow
     {
-        auto verbose_level = args["-v"].count();
+        show_usage(args, name);
+        return 0;
+    }
+    else if (args["--version"])
+    {
+        std::cout << name << " version " << 0.42 << std::endl;
+        return 0;
+    }
+    else if (ep) std::rethrow_exception(ep);
 
-        auto quiet = !!args["--quiet"]; // !! to force bool-context
-        auto recurse = !!args["-r"];
+    // normal program flow
+    auto verbose_level = args["-v"].count();
 
-        auto copy_links  = !!args["-l"];
-        auto deref_links = !!args["-L"];
+    auto quiet = !!args["--quiet"]; // !! to force bool-context
+    auto recurse = !!args["-r"];
 
-        if (copy_links && deref_links) throw pgm::invalid_argument{
-            "options '-l' and '-L' are mutually exclusive"
-        };
+    auto copy_links  = !!args["-l"];
+    auto deref_links = !!args["-L"];
 
-        auto chmod = args["--chmod"].value_or("0644");
+    if (copy_links && deref_links) throw pgm::invalid_argument{
+        "options '-l' and '-L' are mutually exclusive"
+    };
 
-        std::vector<std::string> rules;
-        for (auto const& rule : args["--filter"].values()) rules.push_back(rule);
+    auto chmod = args["--chmod"].value_or("0644");
 
-        std::vector<std::string> sources;
-        for (auto const& source : args["SRC"].values()) sources.push_back(source);
+    std::vector<std::string> rules;
+    for (auto const& rule : args["--filter"].values()) rules.push_back(rule);
 
-        auto dest = args["DEST"].value();
+    std::vector<std::string> sources;
+    for (auto const& source : args["SRC"].values()) sources.push_back(source);
 
-        // "transfer" files
-        for (auto const& source : sources)
-        {
-            if (!quiet) std::cout << "Sending " << source << " to " << dest << std::endl;
-            transfer(source, dest);
-        }
+    auto dest = args["DEST"].value();
+
+    // "transfer" files
+    for (auto const& source : sources)
+    {
+        if (!quiet) std::cout << "Sending " << source << " to " << dest << std::endl;
+        transfer(source, dest);
     }
 
     return 0;
@@ -696,11 +698,6 @@ current directory to the directory /dest/path/. However, since this is a dummy
 program, nothing will actually be transferred.)";
 
     std::cout << args.usage(name, preamble, { }, epilogue) << std::endl;
-}
-
-void show_version(std::string_view name)
-{
-    std::cout << name << " version " << 0.42 << std::endl;
 }
 
 void transfer(std::string_view source, std::string_view dest)
