@@ -227,10 +227,10 @@ inline void args::add_option(option o)
 inline void args::add_param(param p)
 {
     if (ranges::find(params_, p.name, &param::name) != params_.end())
-        throw invalid_definition{"duplicate param '" + p.name + "'"};
+        throw invalid_definition{"duplicate " + name(p)};
 
     if (p.mul && ranges::any_of(params_, &param::mul))
-        throw invalid_definition{"more than one multi-value param '" + p.name + "'"};
+        throw invalid_definition{"more than one multi-value " + name(p)};
 
     p.values.name_ = p.name;
     params_.push_back(std::move(p));
@@ -248,6 +248,16 @@ inline argval const& args::operator[](std::string_view name) const
     }
     throw invalid_argument{"unrecognized option or param '" + std::string{name} + "'"};
 }
+
+////////////////////////////////////////////////////////////////////////////////
+inline std::string args::name(const option& o)
+{
+    auto name = o.short_name.empty() ? o.long_name
+        : o.long_name.empty() ? o.short_name
+        : o.short_name + ", " + o.long_name;
+    return "option '" + name + "'";
+}
+inline std::string args::name(const param& p) { return "param '" + p.name + "'"; }
 
 ////////////////////////////////////////////////////////////////////////////////
 inline void args::parse(const std::filesystem::path& path)
@@ -448,12 +458,7 @@ inline void args::parse(int argc, char* argv[])
     // check required options
     for (auto&& o : options_)
         if (o.req && o.values.empty())
-        {
-            auto name = o.short_name.empty() ? o.long_name
-                : o.long_name.empty() ? o.short_name
-                : o.short_name + ", " + o.long_name;
-            throw missing_argument{"option '" + name + "' is required"};
-        }
+            throw missing_argument{name(o) + " is required"};
 
     // # of non-opt params to fill
     auto need = static_cast<std::size_t>( ranges::count(params_, false, &param::opt) );
@@ -476,7 +481,7 @@ inline void args::parse(int argc, char* argv[])
             do p.values.add(pop(store));
             while (p.mul && store.size() > remain);
         }
-        else throw missing_argument{"param '" + p.name + "' is required"};
+        else throw missing_argument{name(p) + " is required"};
     }
 
     if (store.size()) throw invalid_argument{"extra param '" + store[0] + "'"};

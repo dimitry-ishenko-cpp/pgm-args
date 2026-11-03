@@ -149,6 +149,9 @@ private:
 
     void add_option(option);
     void add_param(param);
+
+    static std::string name(const option&);
+    static std::string name(const param&);
 };
 
 ////////////////////////////////////////////////////////////////////////////////
