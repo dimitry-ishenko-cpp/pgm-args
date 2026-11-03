@@ -220,6 +220,7 @@ inline void args::add_option(option o)
         && ranges::find(options_, o.long_name, &option::long_name) != options_.end())
             throw invalid_definition{"duplicate option '" + o.long_name + "'"};
 
+    o.values.name_ = name(o);
     options_.push_back(std::move(o));
 }
 
@@ -232,7 +233,7 @@ inline void args::add_param(param p)
     if (p.mul && ranges::any_of(params_, &param::mul))
         throw invalid_definition{"more than one multi-value " + name(p)};
 
-    p.values.name_ = p.name;
+    p.values.name_ = name(p);
     params_.push_back(std::move(p));
 }
 

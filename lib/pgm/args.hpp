@@ -57,6 +57,7 @@ struct argval
     decltype(auto) values() const;
 
 private:
+    std::string name_;
     std::vector<std::string> data_;
 
     friend struct args;
