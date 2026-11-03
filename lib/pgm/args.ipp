@@ -80,7 +80,7 @@ inline auto pop(std::deque<std::string>& q)
 
 ////////////////////////////////////////////////////////////////////////////////
 template<typename V>
-V convert(std::string_view s)
+expected<V> convert(std::string_view s)
 {
     static_assert(std::is_arithmetic_v<V>, "Unsupported value type");
 
@@ -88,8 +88,7 @@ V convert(std::string_view s)
     {
         if (iequals(s,  "true") || iequals(s, "yes") || iequals(s,  "on") || s == "1") return true;
         if (iequals(s, "false") || iequals(s,  "no") || iequals(s, "off") || s == "0") return false;
-
-        throw invalid_argument{"invalid boolean value '" + std::string{s} + "'"};
+        return unexpected("invalid boolean value '" + std::string{s} + "'");
     }
     else
     {
@@ -102,7 +101,7 @@ V convert(std::string_view s)
 
         auto msg = "invalid value '" + std::string{s} + "'";
         if (ec == std::errc::result_out_of_range) msg += " - out of range";
-        throw invalid_argument{msg};
+        return unexpected(std::move(msg));
     }
 }
 
@@ -111,9 +110,14 @@ decltype(auto) argval::value(std::size_t n) const
 {
     using U = std::remove_cvref_t<V>;
 
+    if (n >= data_.size())
+        throw std::out_of_range{name_ + ": bad value index " + std::to_string(n)};
+
     if constexpr (std::is_same_v<U, std::string>)
-        return data_.at(n); // const std::string&
-    else return convert<U>(data_.at(n));
+        return data_[n]; // const std::string&
+    else if (auto ev = convert<U>(data_[n]))
+        return auto(ev.value());
+    else throw invalid_argument{name_ + ": " + ev.error()};
 }
 
 template<typename V>
@@ -123,7 +127,7 @@ auto argval::value_or(std::size_t n, V def) const
 
     if constexpr (std::is_convertible_v<U, std::string_view>)
         return n < count() ? data_[n] : std::string{std::move(def)};
-    else return n < count() ? convert<U>(data_[n]) : def;
+    else return n < count() ? value<U>(n) : std::move(def);
 }
 
 template<typename V>
@@ -133,8 +137,9 @@ decltype(auto) argval::values() const
 
     if constexpr (!std::is_same_v<U, std::string>)
     {
-        auto view = data_ | std::views::transform(convert<U>);
-        return std::vector<U>(view.begin(), view.end());
+        std::vector<U> data;
+        for (std::size_t i = 0; i < count(); ++i) data.push_back(value<U>(i));
+        return data;
     }
     else return (data_); // const std::vector<std::string>&
 }

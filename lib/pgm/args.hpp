@@ -7,6 +7,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 #pragma once
 
+#include <expected>
 #include <filesystem>
 #include <initializer_list>
 #include <stdexcept>
@@ -20,7 +21,12 @@
 namespace pgm
 {
 
-template<typename V> V convert(std::string_view);
+template<typename V>
+using expected = std::expected<V, std::string>;
+using std::unexpected;
+
+template<typename V>
+expected<V> convert(std::string_view);
 
 ////////////////////////////////////////////////////////////////////////////////
 // option/param spec
