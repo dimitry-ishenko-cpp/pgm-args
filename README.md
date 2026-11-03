@@ -538,11 +538,11 @@ The subscript `operator[]` returns const ref to an instance of
   enum class color { red, blue };
 
   template<>
-  inline color pgm::convert<color>(std::string_view s)
+  inline pgm::expected<color> pgm::convert<color>(std::string_view s)
   {
       if (s ==  "red") return color::red;
       if (s == "blue") return color::blue;
-      throw pgm::invalid_argument{"invalid color '" + std::string{s} + "'"};
+      return pgm::unexpected("invalid color '" + std::string{s} + "'");
   }
 
   auto c = args["--color"].value_or(color::red);
