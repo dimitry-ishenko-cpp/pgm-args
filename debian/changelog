@@ -1,3 +1,21 @@
+pgm-args (4.0) unstable; urgency=medium
+
+  * Prepare for 4.0 release
+  * example2: consistency
+  * example1: consistency
+  * README: consistency
+  * README: update
+  * Return std::expected from convert<>()
+  * Store option/param name inside argval
+  * Add args::name() overloads
+  * Use shorter names
+  * Avoid _ where possible
+  * Switch to c++23 (std::expected)
+  * Move up enum spec
+  * Mark functions noexcept
+
+ -- Dimitry Ishenko <dimitry.ishenko@gmail.com>  Tue, 03 Nov 2026 00:19:24 -0500
+
 pgm-args (3.0.1) unstable; urgency=medium
 
   * Prepare for 3.0.1 release
