@@ -88,7 +88,7 @@ expected<V> convert(std::string_view s)
     {
         if (iequals(s,  "true") || iequals(s, "yes") || iequals(s,  "on") || s == "1") return true;
         if (iequals(s, "false") || iequals(s,  "no") || iequals(s, "off") || s == "0") return false;
-        return unexpected("invalid boolean value '" + std::string{s} + "'");
+        return unexpected("bad boolean value '" + std::string{s} + "'");
     }
     else
     {
@@ -99,7 +99,7 @@ expected<V> convert(std::string_view s)
         auto [end, ec] = std::from_chars(digits.data(), digits.data() + digits.size(), val);
         if (ec == std::errc{} && end == digits.data() + digits.size()) return val;
 
-        auto msg = "invalid value '" + std::string{s} + "'";
+        auto msg = "bad value '" + std::string{s} + "'";
         if (ec == std::errc::result_out_of_range) msg += " - out of range";
         return unexpected(std::move(msg));
     }
