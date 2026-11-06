@@ -18,7 +18,13 @@ struct conf : testing::Test
         { "-v", "--verbose",      "" },
     };
 
-    const fs::path path = fs::temp_directory_path() / "pgm-args-test.conf";
+    static std::string test_name()
+    {
+        auto info = testing::UnitTest::GetInstance()->current_test_info();
+        return std::string{info->name()} + ".conf";
+    }
+    const fs::path path = fs::temp_directory_path() / test_name();
+
     void write(std::string_view content) { std::ofstream{path} << content; }
 
     void TearDown() override { fs::remove(path); }
