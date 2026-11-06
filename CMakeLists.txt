@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.22)
-project(pgm_args VERSION 4.2)
+project(pgm_args VERSION 4.2.1)
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
