@@ -26,20 +26,21 @@ install(FILES ${HEADERS} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/pgm)
 install(EXPORT ${name}Targets
     FILE ${name}Targets.cmake
     NAMESPACE pgm::
-    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${name}
+    DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/cmake/${name}
 )
 
 include(CMakePackageConfigHelpers)
 write_basic_package_version_file(${name}ConfigVersion.cmake
     VERSION ${PROJECT_VERSION}
     COMPATIBILITY AnyNewerVersion
+    ARCH_INDEPENDENT
 )
 configure_package_config_file(${CMAKE_CURRENT_SOURCE_DIR}/Config.cmake.in
     ${CMAKE_CURRENT_BINARY_DIR}/${name}Config.cmake
-    INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${name}
+    INSTALL_DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/cmake/${name}
 )
 
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${name}ConfigVersion.cmake
     ${CMAKE_CURRENT_BINARY_DIR}/${name}Config.cmake
-    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${name}
+    DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/cmake/${name}
 )
